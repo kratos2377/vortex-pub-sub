@@ -1,4 +1,4 @@
-defmodule HyperNova do
+defmodule Hypernova do
   import Plug.Conn
 
   @type json :: String.t() | number | boolean | nil | [json] | %{String.t() => json}
