@@ -36,7 +36,10 @@ defmodule VortexPubSub.MixProject do
       {:remix, "~> 0.0.2", only: :dev},
       {:credo, "~> 1.7"},
       {:timex, "~> 3.7"},
-      {:websockex, "~> 0.4.3", only: :test}
+      {:websockex, "~> 0.4.3", only: :test},
+      {:kafka_ex, "~> 0.13.0"},
+      {:snappyer, "~> 1.2"}
+
     ]
   end
 
