@@ -6,11 +6,11 @@ defmodule VortexPubSub do
 
     # supervisor children
     children = [
-      {Registry, keys: :unique, name: Vortex.Registry},
-      {Registry, keys: :unique, name: Vortex.UserRegistry},
+      {Registry, keys: :unique, name: VortexPubSub.Registry},
+      {Registry, keys: :unique, name: VortexPubSub.UserRegistry},
       Pulser.UserSupervisor,
       Pulser.GameSupervisor,
-      {Phoenix.PubSub, name: Vortex.PubSub},
+      {Phoenix.PubSub, name: VortexPubSub.PubSub},
       Plug.Cowboy.child_spec(
         scheme: :http,
         plug: Hypernova,
@@ -22,7 +22,7 @@ defmodule VortexPubSub do
       )
     ]
 
-    opts = [strategy: :one_for_one, name: Vortex.Supervisor]
+    opts = [strategy: :one_for_one, name: VortexPubSub.Supervisor]
     Supervisor.start_link(children, opts)
   end
 

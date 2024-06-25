@@ -1,4 +1,4 @@
-defmodule Vortex.Model.UserGameMove do
+defmodule VortexPubSub.Model.UserGameMove do
 
       defstruct id: nil,
                 user_id: nil,

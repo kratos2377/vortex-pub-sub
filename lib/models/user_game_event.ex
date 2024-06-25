@@ -1,7 +1,7 @@
-defmodule Vortex.Model.UserGameEvent do
+defmodule VortexPubSub.Model.UserGameEvent do
 
-  alias Vortex.Utils.UUID
-  alias Vortex.Model.UserGameMove
+  alias VortexPubSub.Utils.UUID
+  alias VortexPubSub.Model.UserGameMove
   defstruct id: nil,
             version: nil,
             name: nil,

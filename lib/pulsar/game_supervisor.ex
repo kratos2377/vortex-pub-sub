@@ -11,12 +11,12 @@ defmodule Pulsar.GameSupervisor do
   def init(_init_arg) do
     children = [
 
-      {Registry, keys: :unique, name: Vortex.Pulsar.ChessRegistry},
-      {Registry, keys: :unique, name: Vortex.Pulsar.ScribbleRegistry},
-      {Registry, keys: :unique, name: Vortex.Pulsar.PokerRegistry},
-        Pulser.ChessSupervisor,
-        Pulser.ScribbleSupervisor,
-        Pulser.PokerSupervisor,
+      {Registry, keys: :unique, name: VortexPubSub.Pulsar.ChessRegistry},
+      {Registry, keys: :unique, name: VortexPubSub.Pulsar.ScribbleRegistry},
+      {Registry, keys: :unique, name: VortexPubSub.Pulsar.PokerRegistry},
+      Pulser.ChessSupervisor,
+      Pulser.ScribbleSupervisor,
+      Pulser.PokerSupervisor,
     ]
     opts = [strategy: :one_for_one, name: Pulsar.GameSupervisor]
     Supervisor.start_link(children, opts)

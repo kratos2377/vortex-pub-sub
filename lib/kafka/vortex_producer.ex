@@ -1,4 +1,4 @@
-defmodule Vortex.KafkaProducer do
+defmodule VortexPubSub.KafkaProducer do
   alias KafkaEx.Protocol.Produce.Message
   alias KafkaEx.Protocol.Produce.Request
 

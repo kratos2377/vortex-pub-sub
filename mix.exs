@@ -5,7 +5,7 @@ defmodule VortexPubSub.MixProject do
     [
       app: :vortex_pub_sub,
       version: "0.1.0",
-      elixir: "~> 1.16",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -33,12 +33,10 @@ defmodule VortexPubSub.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:finch, "~> 0.18.0"},
       {:postgrex, "~> 0.18.0"},
-      {:remix, "~> 0.0.2", only: :dev},
       {:credo, "~> 1.7"},
       {:timex, "~> 3.7"},
       {:websockex, "~> 0.4.3", only: :test},
-      {:kafka_ex, "~> 0.13.0"},
-      {:snappyer, "~> 1.2"}
+      {:kafka_ex, "~> 0.13.0"}
 
     ]
   end

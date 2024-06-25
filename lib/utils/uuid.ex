@@ -1,4 +1,4 @@
-defmodule Vortex.Utils.UUID do
+defmodule VortexPubSub.Utils.UUID do
   # Copied from dogehouse repo
   @type t :: <<_::288>>
 
