@@ -18,6 +18,13 @@ defmodule Pulsar.GameSupervisor do
       Pulser.ScribbleSupervisor,
       Pulser.PokerSupervisor,
     ]
+
+    # Cannot use ets as it does not have distributed sync mechanism
+    # Will use mnesia or redis
+    # :ets.new(:chess_games_table, [:public, :named_table])
+    # :ets.new(:scribble_games_table, [:public, :named_table])
+    # :ets.new(:poker_games_table, [:public, :named_table])
+
     opts = [strategy: :one_for_one, name: Pulsar.GameSupervisor]
     Supervisor.start_link(children, opts)
   end
