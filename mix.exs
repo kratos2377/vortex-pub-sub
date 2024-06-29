@@ -36,7 +36,8 @@ defmodule VortexPubSub.MixProject do
       {:credo, "~> 1.7"},
       {:timex, "~> 3.7"},
       {:websockex, "~> 0.4.3", only: :test},
-      {:kafka_ex, "~> 0.13.0"}
+      {:kafka_ex, "~> 0.13.0"},
+      {:mongodb_ecto, "~> 1.1.2"}
 
     ]
   end

@@ -28,6 +28,13 @@ snappy_module: :snappyer,
 kafka_version: "0.10.1"
 env_config = Path.expand("#{Mix.env()}.exs", __DIR__)
 
+
+config :vortex_pub_sub, VortexPubSub.Repo,
+  adapter: Mongo.Ecto,
+  database: "user_game_events_db",
+  username: "admin",
+  password: "adminpassword",
+  hostname: "localhost"
 if File.exists?(env_config) do
   import_config(env_config)
 end

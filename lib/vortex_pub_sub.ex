@@ -12,6 +12,7 @@ defmodule VortexPubSub do
       Pulser.GameSupervisor,
       {Phoenix.PubSub, name: VortexPubSub.PubSub},
       {VortexPubSub.Presence, []},
+      {VortexPubSub.Repo , []},
       Plug.Cowboy.child_spec(
         scheme: :http,
         plug: Hypernova,
