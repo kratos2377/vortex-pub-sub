@@ -1,13 +1,15 @@
-defmodule MongoModels.UserTurnModel do
+defmodule Holmberg.Schemas.UserGameRelation do
   use Ecto.Schema
   import Ecto.Changeset
-  use MongoModels.TurnModel
 
-  @primary_key {:game_id, :string, []}
-  schema "user_turns" do
-    field(:host_id, :string)
+
+  @primary_key {:user_id, :binary_id, []}
+  schema "users" do
+    field(:user_id, Ecto.UUID.t())
+    field(:username, :string)
     field(:game_id, :string)
-    field(:turn_mappings, MongoModels.TurnModel)
+    field(:player_type, :string)
+    field(:player_status, :string)
   end
 
 
@@ -21,8 +23,8 @@ defmodule MongoModels.UserTurnModel do
 
   # Fix Validation Logic
   @doc false
-  def insert_changeset(user_turn, attrs) do
-    user_turn
-    |> cast(attrs, [:host_id, :game_id, :turn_mappings])
+  def insert_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:user_id, :username, :game_id, :player_type, :player_status])
   end
 end

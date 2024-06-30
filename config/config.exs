@@ -34,7 +34,9 @@ config :vortex_pub_sub, VortexPubSub.Repo,
   database: "user_game_events_db",
   username: "admin",
   password: "adminpassword",
-  hostname: "localhost"
+  hostname: "localhost",
+  pool_size: 10
+
 if File.exists?(env_config) do
   import_config(env_config)
 end

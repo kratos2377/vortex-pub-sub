@@ -1,4 +1,4 @@
-defmodule MongoModels.TurnModel do
+defmodule Holmberg.Schemas.TurnModel do
   @derive [Jason.Encoder]  # This allows the struct to be JSON-encoded
   defstruct [:count_id, :user_id, :username]
 

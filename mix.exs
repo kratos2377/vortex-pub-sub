@@ -15,7 +15,7 @@ defmodule VortexPubSub.MixProject do
   def application do
     [
       mod: {VortexPubSub, []},
-      extra_applications: [:logger]
+      extra_applications: [:logger, :mongodb_ecto, :ecto]
     ]
   end
 
@@ -29,7 +29,6 @@ defmodule VortexPubSub.MixProject do
       {:ecto_sql, "~> 3.11"},
       {:ecto_enum, "~> 1.4"},
       {:jason, "~> 1.4"},
-      {:joken, "~> 2.6"},
       {:elixir_uuid, "~> 1.2"},
       {:finch, "~> 0.18.0"},
       {:postgrex, "~> 0.18.0"},
@@ -37,7 +36,8 @@ defmodule VortexPubSub.MixProject do
       {:timex, "~> 3.7"},
       {:websockex, "~> 0.4.3", only: :test},
       {:kafka_ex, "~> 0.13.0"},
-      {:mongodb_ecto, "~> 1.1.2"}
+      {:mongodb_ecto, "~> 1.1.2"},
+      {:guardian, "~> 2.3"}
 
     ]
   end
