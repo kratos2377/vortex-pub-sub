@@ -23,7 +23,7 @@ defmodule Holmberg.Schemas.UserGameRelation do
 
   # Fix Validation Logic
   @doc false
-  def insert_changeset(user, attrs) do
+  def changeset(user, attrs) do
     user
     |> cast(attrs, [:user_id, :username, :game_id, :player_type, :player_status])
   end
