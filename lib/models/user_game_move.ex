@@ -1,5 +1,5 @@
 defmodule VortexPubSub.Model.UserGameMove do
-
+    alias VortexPubSub.Utils.UUID
       defstruct id: nil,
                 user_id: nil,
                 game_id: nil,

@@ -1,13 +1,13 @@
-defmodule Holmberg.Schemas.UserTurnModel do
+defmodule Holmberg.Schemas.UserTurnMapping do
   use Ecto.Schema
   import Ecto.Changeset
-  use Holmberg.Schemas.TurnModel
+  alias Holmberg.Schemas.TurnModel
 
-  @primary_key {:game_id, :string, []}
+  @primary_key false
   schema "user_turns" do
     field(:host_id, :string)
     field(:game_id, :string)
-    field(:turn_mappings, Holmberg.Schemas.TurnModel)
+    field(:turn_mappings, :string)
   end
 
 
@@ -21,7 +21,7 @@ defmodule Holmberg.Schemas.UserTurnModel do
 
   # Fix Validation Logic
   @doc false
-  def insert_changeset(user_turn, attrs) do
+  def changeset(user_turn, attrs) do
     user_turn
     |> cast(attrs, [:host_id, :game_id, :turn_mappings])
   end

@@ -4,7 +4,7 @@ defmodule VortexPubSub.Model.PokerState do
 
   @primary_key false
   embedded_schema do
-    field :game_id, Ecto.UUID.t()
+    field :game_id, Ecto.UUID
     field :pot_size, :float
     field :current_turn, :string
     embeds_many :user_states, VortexPubSub.Model.Poker

@@ -2,10 +2,9 @@ defmodule Holmberg.Schemas.UserGameRelation do
   use Ecto.Schema
   import Ecto.Changeset
 
-
-  @primary_key {:user_id, :binary_id, []}
+  @primary_key false
   schema "users" do
-    field(:user_id, Ecto.UUID.t())
+    field(:user_id, Ecto.UUID)
     field(:username, :string)
     field(:game_id, :string)
     field(:player_type, :string)

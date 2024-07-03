@@ -26,6 +26,7 @@ defmodule VortexPubSub.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
       {:plug_cowboy, "~> 2.7"},
       {:phoenix_pubsub, "~> 2.1"},
+      {:phoenix_live_view, "~> 0.20.17"},
       {:ecto_sql, "~> 3.11"},
       {:ecto_enum, "~> 1.4"},
       {:jason, "~> 1.4"},
@@ -34,8 +35,7 @@ defmodule VortexPubSub.MixProject do
       {:postgrex, "~> 0.18.0"},
       {:credo, "~> 1.7"},
       {:timex, "~> 3.7"},
-      {:websockex, "~> 0.4.3", only: :test},
-      {:kafka_ex, "~> 0.13.0"},
+      # {:kafka_ex, "~> 0.13.0"},
       {:mongodb_ecto, "~> 1.1.2"},
       {:guardian, "~> 2.3"}
 

@@ -1,7 +1,7 @@
 defmodule Pulsar.GameSupervisor do
 
   use Supervisor
-
+  alias Pulsar.ChessSupervisor
   def start_link(_arg) do
     Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
@@ -14,9 +14,9 @@ defmodule Pulsar.GameSupervisor do
       {Registry, keys: :unique, name: VortexPubSub.Pulsar.ChessRegistry},
       {Registry, keys: :unique, name: VortexPubSub.Pulsar.ScribbleRegistry},
       {Registry, keys: :unique, name: VortexPubSub.Pulsar.PokerRegistry},
-      Pulser.ChessSupervisor,
-      Pulser.ScribbleSupervisor,
-      Pulser.PokerSupervisor,
+      ChessSupervisor,
+      # Pulser.ScribbleSupervisor,
+      # Pulser.PokerSupervisor,
     ]
 
     # Cannot use ets as it does not have distributed sync mechanism

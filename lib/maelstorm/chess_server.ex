@@ -1,8 +1,11 @@
 defmodule MaelStorm.ChessServer do
-    use Genserver
+    use GenServer
 
-    def start_link(game_id) do
-      GenServer.start_link(__MODULE__, {game_id}, name: via_tuple(game_id))
+    alias Quasar.ChessState
+
+
+    def start_link(%ChessState{} = chess_state) do
+      GenServer.start_link(__MODULE__, {chess_state}, name: via_tuple(chess_state.game_id))
     end
 
     def via_tuple(game_id) do
@@ -16,7 +19,7 @@ defmodule MaelStorm.ChessServer do
       |> GenServer.whereis()
     end
 
-    def init({game_id, game_type}) do
+    def init() do
 
     end
 end

@@ -10,7 +10,7 @@ defmodule VortexPubSub.GameLogicController do
   post "/create_lobby" do
      %{"user_id" => user_id, "username" => username, "game_type" => game_type, "game_name" => game_name} = conn.body_params
 
-    result = case ^game_name do
+    result = case game_name do
        "chess" -> ChessSupervisor.
         _ - {:error, :invalid_game}
      end
