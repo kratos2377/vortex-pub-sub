@@ -1,4 +1,4 @@
-defmodule Pulsar.GameSupervisor do
+defmodule Pulsar.GameSupervisorApplication do
 
   use Supervisor
   alias Pulsar.ChessSupervisor
@@ -15,8 +15,8 @@ defmodule Pulsar.GameSupervisor do
       {Registry, keys: :unique, name: VortexPubSub.Pulsar.ScribbleRegistry},
       {Registry, keys: :unique, name: VortexPubSub.Pulsar.PokerRegistry},
       ChessSupervisor,
-      # Pulser.ScribbleSupervisor,
-      # Pulser.PokerSupervisor,
+      # Pulsar.ScribbleSupervisor,
+      # Pulsar.PokerSupervisor,
     ]
 
     # Cannot use ets as it does not have distributed sync mechanism

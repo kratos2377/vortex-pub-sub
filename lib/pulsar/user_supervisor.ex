@@ -1,4 +1,4 @@
-defmodule Pulser.UserSupervisor do
+defmodule Pulsar.UserSupervisor do
   use DynamicSupervisor
 
   def start_link(_arg) do

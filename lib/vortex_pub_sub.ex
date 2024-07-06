@@ -8,8 +8,8 @@ defmodule VortexPubSub do
     children = [
       {Registry, keys: :unique, name: VortexPubSub.Registry},
       {Registry, keys: :unique, name: VortexPubSub.UserRegistry},
-      Pulser.UserSupervisor,
-      Pulser.GameSupervisor,
+      Pulsar.UserSupervisor,
+      Pulsar.GameSupervisorApplication,
       {Phoenix.PubSub, name: VortexPubSub.PubSub},
       {VortexPubSub.Presence, []},
       {VortexPubSub.Repo , []},
