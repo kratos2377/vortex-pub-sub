@@ -12,12 +12,12 @@ defmodule VortexPubSub do
       Pulsar.GameSupervisorApplication,
       {Phoenix.PubSub, name: VortexPubSub.PubSub},
       {VortexPubSub.Presence, []},
-      {VortexPubSub.Repo , []},
+     # {VortexPubSub.Repo , []},
       Plug.Cowboy.child_spec(
         scheme: :http,
         plug: Hypernova,
         options: [
-          port: String.to_integer(System.get_env("PORT") || "4000"),
+          port: String.to_integer("4000"),
           dispatch: dispatch(),
           protocol_options: [idle_timeout: :infinity]
         ]
@@ -25,7 +25,13 @@ defmodule VortexPubSub do
     ]
 
     opts = [strategy: :one_for_one, name: VortexPubSub.Supervisor]
-    Supervisor.start_link(children, opts)
+    case Supervisor.start_link(children, opts) do
+      {:ok , pid} -> IO.puts("Application Started")
+      {:ok , pid}
+      error -> error
+
+
+    end
   end
 
   defp dispatch do
@@ -37,4 +43,6 @@ defmodule VortexPubSub do
        ]}
     ]
   end
+
+
 end

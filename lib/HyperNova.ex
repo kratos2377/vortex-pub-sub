@@ -8,18 +8,27 @@ defmodule Hypernova do
 
 
   plug(VortexPubSub.Hypernova.Cors)
+  plug(:match)
   plug(:dispatch)
 
   options _ do
     send_resp(conn, 200, "")
   end
 
+  get "/health" do
+    send_resp(conn , 200 , "Health Check Pass")
+  end
+
 
   forward("/api/v1/game", to: GameLogicController)
+
+
 
   get _ do
     send_resp(conn, 404, "not found")
   end
+
+
 
   post _ do
     send_resp(conn, 404, "not found")

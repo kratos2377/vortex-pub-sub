@@ -3,6 +3,7 @@ defmodule VortexPubSub.GameLogicController do
   use Plug.Router
 
   alias Pulsar.ChessSupervisor
+  alias Holmberg.Mutation.Game, as: GameMutation
 
   plug(VortexPubSub.Hypernova.Cors)
   plug(:dispatch)
@@ -11,9 +12,15 @@ defmodule VortexPubSub.GameLogicController do
      %{"user_id" => user_id, "username" => username, "game_type" => game_type, "game_name" => game_name} = conn.body_params
 
     result = case game_name do
-       "chess" -> ChessSupervisor.
-        _ - {:error, :invalid_game}
+       "chess" -> case GameMutation.create_new_game(conn) do
+          {:ok , game_id} -> ChessSupervisor.start_game(game_id , user_id , username)
+          {:error, _} -> {}
+       end
+        _ -> {:error, :invalid_game}
      end
+
+     IO.puts("RESULT IS")
+     IO.puts(result)
 
      if {:ok , game_id} = result do
       conn

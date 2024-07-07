@@ -15,7 +15,7 @@ defmodule VortexPubSub.MixProject do
   def application do
     [
       mod: {VortexPubSub, []},
-      extra_applications: [:logger, :mongodb_ecto, :ecto]
+      extra_applications: [:logger, :ecto]
     ]
   end
 
@@ -36,7 +36,7 @@ defmodule VortexPubSub.MixProject do
       {:credo, "~> 1.7"},
       {:timex, "~> 3.7"},
       # {:kafka_ex, "~> 0.13.0"},
-      {:mongodb_ecto, "~> 1.1.2"},
+      {:mongodb_driver, "~> 1.4"},
       {:guardian, "~> 2.3"}
 
     ]
