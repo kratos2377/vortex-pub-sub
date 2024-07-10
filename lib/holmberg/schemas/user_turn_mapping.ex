@@ -21,8 +21,5 @@ defmodule Holmberg.Schemas.UserTurnMapping do
 
   # Fix Validation Logic
   @doc false
-  def changeset(user_turn, attrs) do
-    user_turn
-    |> cast(attrs, [:host_id, :game_id, :turn_mappings])
-  end
+
 end

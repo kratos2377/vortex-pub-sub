@@ -7,7 +7,7 @@ defmodule VortexPubSub.Hypernova.Cors do
   def call(conn, _opts) do
     conn
     |> put_resp_header("Access-Control-Allow-Origin", "*")
-    |> put_resp_header("Access-Control-Allow-Method", "POST, GET, OPTIONS")
+    |> put_resp_header("Access-Control-Allow-Method", "*")
     |> put_resp_header("Access-Control-Max-Age", "604800")
     |> put_resp_header(
       "Access-Control-Allow-Headers",

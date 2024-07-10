@@ -23,13 +23,6 @@ defmodule Holmberg.Schemas.GameModel do
     field :scribble_state, :string         # Assuming ScribbleState is a complex type
   end
 
-def changeset(game, attrs) do
-  game
-  |> cast(attrs, [:user_count, :host_id, :name, :game_type, :is_staked,
-                  :chess_state, :state_index, :description,
-                  :staked_money_state, :poker_state, :scribble_state])
-  |> validate_required([:user_count, :host_id, :name, :game_type, :is_staked,
-                        :chess_state, :state_index, :description])
-end
+
 
 end

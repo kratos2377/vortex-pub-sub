@@ -5,7 +5,6 @@ defmodule Holmberg.Mutation.Game do
   alias Holmberg.Schemas.UserGameRelation
   alias Holmberg.Schemas.UserTurnMapping
   alias Holmberg.Schemas.TurnModel
-  alias Holmberg.Manager.GameManager
 
   def create_new_game(conn) do
     game_id = Ecto.UUID.generate()
@@ -13,75 +12,83 @@ defmodule Holmberg.Mutation.Game do
     game_changeset = create_game_changeset(game_id, params["user_id"], params["game_type"] , params["game_name"])
     user_game_relation_changeset = create_user_game_relation_changeset(game_id, params["user_id"], params["username"], "host")
     user_turn_mapping_changeset = create_user_turn_mapping_changeset(params["user_id"], game_id, params["user_id"], params["username"], 1)
-    case Repo.transaction(GameManager.create_lobby_multi_changeset(game_changeset, user_game_relation_changeset , user_turn_mapping_changeset)) do
-      {:ok, _} -> conn |> put_resp_content_type("application/json")
-      |> send_resp(
-        200,
-        Jason.encode!(%{result: %{ success: true} , game_id: game_id})
-      )
+    {:ok, mongo_conn} = Mongo.start_link(url: "mongodb://admin:adminpassword@localhost/user_game_events_db?authSource=admin", pool_size: 1)
+    operations = [
+     {"games",game_changeset},
+     {"users" ,user_game_relation_changeset},
+     {"user_turns" ,user_turn_mapping_changeset}
+    ]
 
-      {:error, _ , error_message} ->   conn |> put_resp_content_type("application/json")
-      |> send_resp(
-        400,
-        Jason.encode!(%{result: %{ success: false} , error_message: error_message})
-      )
+    case Mongo.insert_one(mongo_conn , "games", game_changeset) do
+      {:ok, _} -> case Mongo.insert_one(mongo_conn, "users" , user_game_relation_changeset) do
+        {:ok , _} -> case Mongo.insert_one(mongo_conn, "user_turns" , user_turn_mapping_changeset) do
+          {:ok , _} -> {:ok , game_id}
+          {:error, error_message} ->   {:error , error_message}
 
-      _ ->
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(
-          500,
-          Jason.encode!(%{result: %{ success: false} , error_message: "Error! Server not available. Try later"})
-        )
+          _ -> {:error, "Error Occured while Persisting User Turn Mapping Model"}
+        end
+        {:error, error_message} ->   {:error , error_message}
+
+        _ -> {:error, "Error Occured while Persisting User Model"}
+      end
+
+      {:error, error_message} ->   {:error , error_message}
+
+      _ -> {:error, "Error Occured while Persisting Game Model"}
     end
   end
 
 
+
+  def join_lobby(conn) do
+
+  end
+
+
   defp create_game_changeset(game_id, host_id, game_name, game_type) do
-    game_model = %GameModel{
+    game_model = %{
       id: game_id,
       user_count: 1,
       host_id: host_id,
       name: game_name,
       game_type: game_name,
-      is_staked:  ^game_type = "staked",
+      is_staked:  game_type == "staked",
       state_index: 0,
       description: "LOBBY",
       chess_state: "",
-      staked_money_state: nil,
-      poker_state: nil,
-      scribble_state: nil,
-    } |> GameModel.changeset
-
+      staked_money_state: "",
+      poker_state: "",
+      scribble_state: "",
+    }
     game_model
   end
 
   defp create_user_game_relation_changeset(game_id , user_id, username, player_type) do
-    user_game_relation_model = %UserGameRelation{
+    user_game_relation_model = %{
       user_id: user_id,
       username: username,
       game_id: game_id,
       player_type: player_type,
       player_status: "not-ready"
-    } |> UserGameRelation.changeset
+    }
 
     user_game_relation_model
   end
 
   defp create_user_turn_mapping_changeset(host_id, game_id, user_id, username, user_count_id) do
-    game_model = %UserTurnMapping{
+    turn_mapping_model = %{
       game_id: game_id,
       host_id: host_id,
       turn_mappings: [
-        %TurnModel{
+        %{
           count_id: user_count_id,
           user_id: user_id,
           username: username
         }
       ]
-    } |> UserTurnMapping.changeset
+    }
 
-    game_model
+    turn_mapping_model
   end
 
 

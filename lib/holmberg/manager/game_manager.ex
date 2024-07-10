@@ -5,7 +5,12 @@ defmodule Holmberg.Manager.GameManager do
         Multi.new()
         |> Multi.insert(:games, game_changeset)
         |> Multi.insert(:users, user_game_relation_changeset)
-        |> Multi.insert(:users_turns, user_game_relation_changeset)
+        |> Multi.insert(:users_turns, user_turn_mapping_changeset)
+  end
+
+
+  def join_lobby_multi_changeset() do
+
   end
 
 end

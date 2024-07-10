@@ -6,82 +6,90 @@ defmodule VortexPubSub.GameLogicController do
   alias Holmberg.Mutation.Game, as: GameMutation
 
   plug(VortexPubSub.Hypernova.Cors)
+
+  plug(Plug.Parsers,
+    parsers: [:json],
+    pass: ["text/*"],
+    json_decoder: Jason
+  )
+
+  plug(:match)
   plug(:dispatch)
 
   post "/create_lobby" do
      %{"user_id" => user_id, "username" => username, "game_type" => game_type, "game_name" => game_name} = conn.body_params
 
-    result = case game_name do
+
+   case game_name do
        "chess" -> case GameMutation.create_new_game(conn) do
           {:ok , game_id} -> ChessSupervisor.start_game(game_id , user_id , username)
-          {:error, _} -> {}
+          conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            200,
+            Jason.encode!(%{result: %{ success: true} , game_id: "#{game_id}"})
+          )
+          {:error, message} ->
+            conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              400,
+              Jason.encode!(%{result: %{ success: false}, error_message: message})
+            )
+
        end
-        _ -> {:error, :invalid_game}
+        _ ->
+          conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+          )
+
      end
 
-     IO.puts("RESULT IS")
-     IO.puts(result)
-
-     if {:ok , game_id} = result do
-      conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(
-        200,
-        Jason.encode!(%{result: %{ success: true} , game_id: game_id})
-      )
-     end
-
-     conn
-     |> put_resp_content_type("application/json")
-     |> send_resp(
-       404,
-       Jason.encode!(%{result: %{ success: false} , error_message: "ERROR_WHILE_CREATING_ENTITIES"})
-     )
-
-
-
   end
 
-  post "/join_lobby" do
+  # post "/join_lobby" do
 
-  end
+  # end
 
-  post "/leave_lobby" do
+  # post "/leave_lobby" do
 
-  end
+  # end
 
-  post "/destroy_lobby_and_game" do
+  # post "/destroy_lobby_and_game" do
 
-  end
+  # end
 
-  post "/update_player_status" do
+  # post "/update_player_status" do
 
-  end
+  # end
 
 
-  post "/start_game" do
+  # post "/start_game" do
 
-  end
+  # end
 
-  post "/get_user_turn_mappings" do
+  # post "/get_user_turn_mappings" do
 
-  end
+  # end
 
-  post "/verify_game_status" do
+  # post "/verify_game_status" do
 
-  end
+  # end
 
-  post "/get_lobby_players" do
+  # post "/get_lobby_players" do
 
-  end
+  # end
 
-  get "/get_current_state_of_game" do
+  # get "/get_current_state_of_game" do
 
-  end
+  # end
 
-  post "/get_game_details" do
+  # post "/get_game_details" do
 
-  end
+  # end
 
 
 end

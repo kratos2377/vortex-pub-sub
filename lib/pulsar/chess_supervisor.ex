@@ -20,7 +20,6 @@ defmodule Pulsar.ChessSupervisor do
       start: {ChessServer, :start_link, [chess_init_state]},
       restart: :transient
     }
-
     DynamicSupervisor.start_child(__MODULE__, child_spec)
   end
 

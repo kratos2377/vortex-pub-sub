@@ -20,10 +20,5 @@ defmodule Holmberg.Schemas.UserGameRelation do
   #   |> validate_length(:description, max: 200)
   # end
 
-  # Fix Validation Logic
-  @doc false
-  def changeset(user, attrs) do
-    user
-    |> cast(attrs, [:user_id, :username, :game_id, :player_type, :player_status])
-  end
+
 end
