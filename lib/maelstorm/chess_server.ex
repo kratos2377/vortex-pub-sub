@@ -1,7 +1,8 @@
 defmodule MaelStorm.ChessServer do
     use GenServer
     require Logger
-    alias Quasar.ChessState
+    alias Quasar.ChessStateManager
+    alias GameState.ChessState
 
 
     def start_link(%ChessState{} = chess_state) do
@@ -19,8 +20,40 @@ defmodule MaelStorm.ChessServer do
       |> GenServer.whereis()
     end
 
+
+
+
+    def join_lobby(game_id , user_id , username) do
+        GenServer.call(via_tuple(game_id), {:join_lobby, user_id , username})
+    end
+
+    def leave_lobby(game_id, user_id) do
+      GenServer.call(via_tuple(game_id), {:leave_lobby, user_id})
+    end
+
+
+
+
+    #Server Callbacks
+
     def init(%ChessState{} = chess_state) do
       Logger.info("Spawned ChessGameServer with pid='#{self()}' and game_id='#{chess_state.game_id}'")
       {:ok , chess_state}
     end
+
+    def handle_call({:join_lobby, user_id , username}, _from, state) do
+      res = ChessStateManager.add_new_player(state , user_id , username)
+
+      {:reply , res.player_count_index , res}
+    end
+
+    def handle_call({:leave_lobby, user_id }, _from, state) do
+      res = ChessStateManager.remove_player(state, user_id)
+
+      case res do
+        {:error, _} -> {:reply , "error", state}
+        _ -> {:reply , "success" , res}
+      end
+    end
+
 end

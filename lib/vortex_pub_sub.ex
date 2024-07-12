@@ -12,7 +12,7 @@ defmodule VortexPubSub do
       Pulsar.GameSupervisorApplication,
       {Phoenix.PubSub, name: VortexPubSub.PubSub},
       {VortexPubSub.Presence, []},
-      worker(Mongo, [[name: :mongo, database: "user_game_events_db", pool_size: 5]]),
+      worker(Mongo, [[name: :mongo, url: "mongodb://admin:adminpassword@localhost/user_game_events_db?authSource=admin", pool_size: 5]]),
      # {VortexPubSub.Repo , []},
       Plug.Cowboy.child_spec(
         scheme: :http,

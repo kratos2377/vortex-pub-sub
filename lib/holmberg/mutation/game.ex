@@ -12,16 +12,10 @@ defmodule Holmberg.Mutation.Game do
     game_changeset = create_game_changeset(game_id, params["user_id"], params["game_type"] , params["game_name"])
     user_game_relation_changeset = create_user_game_relation_changeset(game_id, params["user_id"], params["username"], "host")
     user_turn_mapping_changeset = create_user_turn_mapping_changeset(params["user_id"], game_id, params["user_id"], params["username"], 1)
-    {:ok, mongo_conn} = Mongo.start_link(url: "mongodb://admin:adminpassword@localhost/user_game_events_db?authSource=admin", pool_size: 1)
-    operations = [
-     {"games",game_changeset},
-     {"users" ,user_game_relation_changeset},
-     {"user_turns" ,user_turn_mapping_changeset}
-    ]
 
-    case Mongo.insert_one(mongo_conn , "games", game_changeset) do
-      {:ok, _} -> case Mongo.insert_one(mongo_conn, "users" , user_game_relation_changeset) do
-        {:ok , _} -> case Mongo.insert_one(mongo_conn, "user_turns" , user_turn_mapping_changeset) do
+    case Mongo.insert_one(:mongo , "games", game_changeset) do
+      {:ok, _} -> case Mongo.insert_one(:mongo, "users" , user_game_relation_changeset) do
+        {:ok , _} -> case Mongo.insert_one(:mongo, "user_turns" , user_turn_mapping_changeset) do
           {:ok , _} -> {:ok , game_id}
           {:error, error_message} ->   {:error , error_message}
 

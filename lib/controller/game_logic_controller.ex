@@ -50,46 +50,48 @@ defmodule VortexPubSub.GameLogicController do
 
   end
 
-  # post "/join_lobby" do
+  post "/join_lobby" do
 
-  # end
+    %{"user_id" => user_id, "username" => username, "game_type" => game_type, "game_name" => game_name} = conn.body_params
 
-  # post "/leave_lobby" do
+  end
 
-  # end
+  post "/leave_lobby" do
 
-  # post "/destroy_lobby_and_game" do
+  end
 
-  # end
+  post "/destroy_lobby_and_game" do
 
-  # post "/update_player_status" do
+  end
 
-  # end
+  post "/update_player_status" do
+
+  end
 
 
-  # post "/start_game" do
+  post "/start_game" do
 
-  # end
+  end
 
-  # post "/get_user_turn_mappings" do
+  post "/get_user_turn_mappings" do
 
-  # end
+  end
 
-  # post "/verify_game_status" do
+  post "/verify_game_status" do
 
-  # end
+  end
 
-  # post "/get_lobby_players" do
+  post "/get_lobby_players" do
 
-  # end
+  end
 
-  # get "/get_current_state_of_game" do
+  get "/get_current_state_of_game" do
 
-  # end
+  end
 
-  # post "/get_game_details" do
+  post "/get_game_details" do
 
-  # end
+  end
 
 
 end

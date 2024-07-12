@@ -1,6 +1,6 @@
 defmodule Pulsar.ChessSupervisor do
   use DynamicSupervisor
-  alias Quasar.ChessState
+  alias GameState.ChessState
   alias MaelStorm.ChessServer
 
   def start_link(_arg) do
@@ -21,6 +21,11 @@ defmodule Pulsar.ChessSupervisor do
       restart: :transient
     }
     DynamicSupervisor.start_child(__MODULE__, child_spec)
+  end
+
+
+  def increment_player_call(game_id) do
+
   end
 
   def stop_game(game_id) do
