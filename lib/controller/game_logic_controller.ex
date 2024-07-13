@@ -3,8 +3,10 @@ defmodule VortexPubSub.GameLogicController do
   use Plug.Router
 
   alias Pulsar.ChessSupervisor
+  alias MaelStorm.ChessServer
   alias Holmberg.Mutation.Game, as: GameMutation
-
+  alias VortexPubSub.Constants
+  alias JsonResult
   plug(VortexPubSub.Hypernova.Cors)
 
   plug(Plug.Parsers,
@@ -52,11 +54,87 @@ defmodule VortexPubSub.GameLogicController do
 
   post "/join_lobby" do
 
-    %{"user_id" => user_id, "username" => username, "game_type" => game_type, "game_name" => game_name} = conn.body_params
+    %{"user_id" => user_id, "username" => username, "game_id" => game_id, "game_name" => game_name} = conn.body_params
+
+
+    case game_name do
+      "chess" -> case ChessServer.game_pid(game_id) do
+        pid when is_pid(pid) ->
+          res = ChessServer.join_lobby(game_id, user_id, username)
+
+          case GameMutation.join_lobby(game_id , res) do
+            {:ok, _} -> conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              200,
+              Jason.encode!(%{result: %{ success: true}})
+            )
+              _ ->
+                _res_leave = ChessServer.leave_lobby(game_id, user_id)
+                conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(JsonResult.create_error_struct(Constants.error_while_joining_lobby()))
+        )
+          end
+        nil ->
+          conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: Constants.game_not_found()})
+        )
+      end
+        _ -> conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+        )
+    end
 
   end
 
   post "/leave_lobby" do
+    %{"user_id" => user_id, "username" => username, "game_id" => game_id, "game_name" => game_name} = conn.body_params
+
+    case game_name do
+      "chess" -> case ChessServer.game_pid(game_id) do
+        pid when is_pid(pid) ->
+          res = ChessServer.leave_lobby(game_id, user_id)
+
+          case GameMutation.leave_lobby(game_id , res) do
+            {:ok, _} -> conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              200,
+              Jason.encode!(%{result: %{ success: true}})
+            )
+              _ ->
+                _res_leave = ChessServer.leave_lobby(game_id, user_id)
+                conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(JsonResult.create_error_struct(Constants.error_while_joining_lobby()))
+        )
+          end
+        nil ->
+          conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: Constants.game_not_found()})
+        )
+      end
+        _ -> conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+        )
+    end
 
   end
 

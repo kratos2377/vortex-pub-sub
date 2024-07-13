@@ -5,6 +5,7 @@ defmodule Holmberg.Mutation.Game do
   alias Holmberg.Schemas.UserGameRelation
   alias Holmberg.Schemas.UserTurnMapping
   alias Holmberg.Schemas.TurnModel
+  alias VortexPubSub.Constants
 
   def create_new_game(conn) do
     game_id = Ecto.UUID.generate()
@@ -34,8 +35,62 @@ defmodule Holmberg.Mutation.Game do
 
 
 
-  def join_lobby(conn) do
+  def join_lobby(conn , res) do
+    params = conn.body_params
 
+    case Mongo.update_one(:mongo, "user_turns" , %{id: params["game_id"]} , %{ "$push": %{ turn_mappings: %{
+              count_id: res,
+              user_id: params["user_id"],
+              username: params["username"],
+          },
+      } }) do
+
+        {:ok , _} ->
+          user_join_changeset = create_user_game_relation_changeset(params["game_id"] , params["user_id"], params["username"], "player")
+
+          case Mongo.insert_one(:mongo, "users", user_join_changeset) do
+            {:ok, _} ->
+              game_count_inc_doc = %{"$inc": %{user_count: 1}}
+              case Mongo.update_one(:mongo, "games" , game_count_inc_doc) do
+                {:ok , _} -> {:ok, :lobby_joined}
+                _ -> {:error , :error_while_joining_lobby}
+
+            end
+              _ -> {:error , :error_while_joining_lobby}
+          end
+
+        _ -> {:error , Constants.error_while_updating_mongo_entities()}
+
+      end
+  end
+
+  def leave_lobby(conn , res) do
+    params = conn.body_params
+
+    case Mongo.update_one(:mongo, "user_turns" , %{id: params["game_id"]} , %{ "$pull": %{ turn_mappings: %{
+              user_id: params["user_id"],
+          },
+      } }) do
+
+        {:ok , _} ->
+          user_join_changeset = create_user_game_relation_changeset(params["game_id"] , params["user_id"], params["username"], "player")
+
+
+            case Mongo.delete_one(:mongo, "users", %{user_id: params["user_id"]} ) do
+              {:ok, _} ->
+                game_count_dec_doc = %{"$inc": %{user_count: -1}}
+                case Mongo.update_one(:mongo, "games" , game_count_dec_doc) do
+                  {:ok , _} -> {:ok, :left_lobby}
+                  _ -> {:error , :error_while_joining_lobby}
+
+              end
+                _ -> {:error , :error_while_joining_lobby}
+            end
+
+
+        _ -> {:error , Constants.error_while_updating_mongo_entities()}
+
+      end
   end
 
 
