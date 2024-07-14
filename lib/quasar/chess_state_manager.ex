@@ -24,4 +24,11 @@ defmodule Quasar.ChessStateManager do
     end
   end
 
+  def update_player_status(%ChessState{} = chess_state, user_id , status) do
+    new_updated_player_status_map = chess_state.player_ready_status
+    new_updated_player_status_map  = Map.update(new_updated_player_status_map , user_id , "not-ready", fn _existing_value -> status end)
+
+    %{chess_state | player_ready_status: new_updated_player_status_map}
+  end
+
 end

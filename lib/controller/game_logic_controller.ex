@@ -112,7 +112,6 @@ defmodule VortexPubSub.GameLogicController do
               Jason.encode!(%{result: %{ success: true}})
             )
               _ ->
-                _res_leave = ChessServer.leave_lobby(game_id, user_id)
                 conn
         |> put_resp_content_type("application/json")
         |> send_resp(
@@ -139,10 +138,56 @@ defmodule VortexPubSub.GameLogicController do
   end
 
   post "/destroy_lobby_and_game" do
+      %{"game_id" => game_id, "game_name" => game_name} = conn.body_params
 
+      case game_name do
+        "chess" -> case GameMutation.destroy_lobby_and_game(conn) do
+          {:ok , _} -> ChessSupervisor.stop_game(game_id)
+
+          conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            200,
+            Jason.encode!(%{result: %{ success: true}})
+          )
+
+            _ -> conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              400,
+              Jason.encode!(JsonResult.create_error_struct(Constants.error_while_destroying_lobby()))
+            )
+        end
+
+          _ -> conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+          )
+      end
   end
 
   post "/update_player_status" do
+    %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "status" => status} = conn.body_params
+
+    case game_name do
+      "chess" -> ChessServer.update_player_status(game_id , user_id , status)
+
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true}})
+      )
+
+      _ -> conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(
+        400,
+        Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+      )
+    end
 
   end
 

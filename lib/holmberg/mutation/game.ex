@@ -73,9 +73,6 @@ defmodule Holmberg.Mutation.Game do
       } }) do
 
         {:ok , _} ->
-          user_join_changeset = create_user_game_relation_changeset(params["game_id"] , params["user_id"], params["username"], "player")
-
-
             case Mongo.delete_one(:mongo, "users", %{user_id: params["user_id"]} ) do
               {:ok, _} ->
                 game_count_dec_doc = %{"$inc": %{user_count: -1}}
@@ -91,6 +88,21 @@ defmodule Holmberg.Mutation.Game do
         _ -> {:error , Constants.error_while_updating_mongo_entities()}
 
       end
+  end
+
+  def destroy_lobby_and_game(conn) do
+    params = conn.body_params
+    case Mongo.delete_one(:mongo, "games", %{id: params["game_id"]} ) do
+      {:ok, _} -> case Mongo.delete_many(:mongo , "users" , %{game_id: params["game_id"]}) do
+        {:ok , _} -> case Mongo.delete_one(:mongo, "user_turns", %{game_id: params["game_id"]}) do
+          {:ok, _} -> {:ok , :lobby_and_game_entities_deleted}
+          _ -> {:error, :error_while_destroying_lobby}
+        end
+        _ -> {:error, :error_while_destroying_lobby}
+      end
+        _ -> {:error, :error_while_destroying_lobby}
+    end
+
   end
 
 
