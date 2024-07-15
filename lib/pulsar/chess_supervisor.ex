@@ -24,10 +24,6 @@ defmodule Pulsar.ChessSupervisor do
   end
 
 
-  def increment_player_call(game_id) do
-
-  end
-
   def stop_game(game_id) do
     child_gen_id = ChessServer.game_pid(game_id)
     DynamicSupervisor.terminate_child(__MODULE__, child_gen_id)

@@ -35,6 +35,10 @@ defmodule MaelStorm.ChessServer do
       GenServer.call(via_tuple(game_id), {:update_player_status, user_id , status} )
     end
 
+    def start_game(game_id) do
+      GenServer.call(via_tuple(game_id), {:start_game} )
+    end
+
 
 
 
@@ -64,6 +68,12 @@ defmodule MaelStorm.ChessServer do
       res = ChessStateManager.update_player_status(state , user_id , status)
 
       {:reply, "success" , res}
+    end
+
+    def handle_call({:start_game}, _from, state) do
+      res = ChessStateManager.check_game_start_status(state)
+
+      {:reply , res , state}
     end
 
 end

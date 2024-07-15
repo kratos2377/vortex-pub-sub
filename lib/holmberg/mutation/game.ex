@@ -76,7 +76,7 @@ defmodule Holmberg.Mutation.Game do
             case Mongo.delete_one(:mongo, "users", %{user_id: params["user_id"]} ) do
               {:ok, _} ->
                 game_count_dec_doc = %{"$inc": %{user_count: -1}}
-                case Mongo.update_one(:mongo, "games" , game_count_dec_doc) do
+                case Mongo.update_one(:mongo, "games" , %{id: params["game_id"]}, game_count_dec_doc) do
                   {:ok , _} -> {:ok, :left_lobby}
                   _ -> {:error , :error_while_joining_lobby}
 

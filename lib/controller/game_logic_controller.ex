@@ -7,6 +7,7 @@ defmodule VortexPubSub.GameLogicController do
   alias Holmberg.Mutation.Game, as: GameMutation
   alias VortexPubSub.Constants
   alias JsonResult
+  alias VortexPubSub.KafkaProducer
   plug(VortexPubSub.Hypernova.Cors)
 
   plug(Plug.Parsers,
@@ -194,26 +195,152 @@ defmodule VortexPubSub.GameLogicController do
 
   post "/start_game" do
 
+    %{"game_id" => game_id, "game_name" => game_name} = conn.body_params
+
+    case game_name do
+      "chess" ->
+       res =   ChessServer.start_game(game_id)
+
+       case res do
+         "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
+           {:ok, _} ->
+
+            KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id})
+
+            conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              200,
+              Jason.encode!(%{result: %{ success: true}})
+            )
+
+            _ -> conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              400,
+              Jason.encode!(%{result: %{ success: false},  error_message: Constants.error_while_updating_mongo_entities()})
+            )
+         end
+          "error" -> conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: Constants.all_players_not_ready()})
+          )
+       end
+
+
+      _ -> conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(
+        400,
+        Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+      )
+    end
+
+
   end
 
   post "/get_user_turn_mappings" do
 
+    %{"game_id" => game_id} = conn.body_params
+    options = [
+      sort: %{"turn_mappings.count_id" => 1},
+      limit: 1
+    ]
+    case Mongo.find_one(:mongo, "user_turns", %{game_id: game_id}, options ) do
+       user_turns -> conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true},  user_turns: user_turns})
+      )
+
+      _ ->  conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        400,
+        Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+      )
+    end
+
   end
 
   post "/verify_game_status" do
+    %{"game_id" => game_id , "game_name" => game_name} = conn.body_params
 
+    case game_name do
+      "chess" -> case ChessServer.game_pid(game_id) do
+        pid when is_pid(pid) ->   conn |>  put_resp_content_type("application/json")
+        |> send_resp(
+          200,
+          Jason.encode!(%{result: %{ success: true}})
+        )
+
+        nil -> conn |>  put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game"})
+        )
+
+        end
+        _ ->  conn |>  put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game Type"})
+        )
+    end
   end
 
   post "/get_lobby_players" do
+    %{"game_id" => game_id, "host_user_id"=> host_user_id} = conn.body_params
 
+    case Mongo.find(:mongo, "users", %{game_id: game_id}) do
+      {:ok , user_cursor} ->
+        user_list = user_cursor |> Enum.to_list()
+        conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true},  lobby_users: user_list})
+      )
+      {:error , _} -> conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        400,
+        Jason.encode!(%{result: %{ success: false},  error_message: "No Game or UserMapping found"})
+      )
+    end
   end
 
   get "/get_current_state_of_game" do
+    %{"game_id" => game_id} = conn.body_params
 
+    case Mongo.find_one(:mongo, "games", %{id: game_id}) do
+      game_model ->  conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true},  game_state: game_model.chess_state})
+      )
+      {:error , _} -> conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        400,
+        Jason.encode!(%{result: %{ success: false},  error_message: "No Game Mapping found"})
+      )
+    end
   end
 
   post "/get_game_details" do
+    %{"game_id" => game_id} = conn.body_params
 
+    case Mongo.find_one(:mongo, "games", %{id: game_id}) do
+      game_model -> conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true},  game: game_model})
+      )
+      {:error , _} -> conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        400,
+        Jason.encode!(%{result: %{ success: false},  error_message: "No Game Mapping found"})
+      )
+    end
   end
 
 

@@ -35,7 +35,7 @@ defmodule VortexPubSub.MixProject do
       {:postgrex, "~> 0.18.0"},
       {:credo, "~> 1.7"},
       {:timex, "~> 3.7"},
-      # {:kafka_ex, "~> 0.13.0"},
+      {:kafka_ex, "~> 0.13.0"},
       {:mongodb_driver, "~> 1.4"},
       {:guardian, "~> 2.3"}
 
