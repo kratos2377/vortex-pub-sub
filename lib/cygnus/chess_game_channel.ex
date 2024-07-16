@@ -43,6 +43,38 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
   end
 
+  def handle_in("update-user-status-in-room", %{user_id: user_id, username: username, game_id: game_id, status: status} ,socket) do
+    broadcast!(socket, "user-status-update", %{user_id: user_id, username: username, game_id: game_id, status: status}  )
+    KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, username: username, game_id: game_id, status: status}, Constants.kafka_user_status_event_key())
+    {:noreply,socket}
+  end
+
+
+  def handle_in("game-event", %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type} , socket) do
+    broadcast!(socket, "send-user-game-event", %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type}  )
+    user_game_move_event =  %{
+          game_id: game_id,
+          user_id: user_id,
+          user_move: game_event,
+         move_type: event_type,
+      }
+
+    KafkaProducer.send_message(Constants.kafka_user_game_events_topic(),  %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type}, Constants.kafka_user_game_move_event_key())
+    {:noreply,socket}
+  end
+
+  def handle_in("verifying-game-status", %{user_id: user_id, game_id: game_id} , socket) do
+    broadcast!(socket, "verifying-game", %{user_id: user_id , game_id: game_id} )
+    KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
+    {:noreply,socket}
+  end
+
+  def handle_in("start-game-event", %{admin_id: admin_id, game_id: game_id, game_name: game_name} , socket) do
+    broadcast!(socket, "start-game-for-all", %{admin_id: admin_id , game_id: game_id, game_name: game_name} )
+   # KafkaProducer.send_message(Constants.kafka_user_topic(),  %{admin_id: admin_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
+    {:noreply,socket}
+  end
+
   defp current_player(socket) do
       socket.assigns.current_player
   end
