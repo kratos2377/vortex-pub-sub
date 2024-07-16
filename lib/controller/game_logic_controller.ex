@@ -205,7 +205,7 @@ defmodule VortexPubSub.GameLogicController do
          "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
            {:ok, _} ->
 
-            KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id})
+            KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id}, Constants.kafka_game_general_event_key())
 
             conn
             |> put_resp_content_type("application/json")
