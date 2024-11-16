@@ -1,6 +1,6 @@
 defmodule Holmberg.Mutation.Game do
   import Plug.Conn
-  alias VortexPubSub.Repo
+  alias VortexPubSub.MongoRepo
   alias Holmberg.Schemas.GameModel
   alias Holmberg.Schemas.UserGameRelation
   alias Holmberg.Schemas.UserTurnMapping

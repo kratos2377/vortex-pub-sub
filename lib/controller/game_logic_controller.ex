@@ -344,4 +344,9 @@ defmodule VortexPubSub.GameLogicController do
   end
 
 
+  post "/stake_in_game" do
+
+  end
+
+
 end

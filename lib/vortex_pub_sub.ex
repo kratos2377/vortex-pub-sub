@@ -8,12 +8,13 @@ defmodule VortexPubSub do
     children = [
       {Registry, keys: :unique, name: VortexPubSub.Registry},
       {Registry, keys: :unique, name: VortexPubSub.UserRegistry},
-      Pulsar.UserSupervisor,
+   #   Pulsar.UserSupervisor,
       Pulsar.GameSupervisorApplication,
       {Phoenix.PubSub, name: VortexPubSub.PubSub},
       {VortexPubSub.Presence, []},
       worker(Mongo, [[name: :mongo, url: "mongodb://admin:adminpassword@localhost/user_game_events_db?authSource=admin", pool_size: 5]]),
-     # {VortexPubSub.Repo , []},
+     # {VortexPubSub.MongoRepo , []},
+     VortexPubSub.PostgresRepo,
       Plug.Cowboy.child_spec(
         scheme: :http,
         plug: Hypernova,

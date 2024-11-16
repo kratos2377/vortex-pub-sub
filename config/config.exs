@@ -29,12 +29,20 @@ import Config
 # env_config = Path.expand("#{Mix.env()}.exs", __DIR__)
 
 
-config :vortex_pub_sub, VortexPubSub.Repo,
+config :vortex_pub_sub, VortexPubSub.MongoRepo,
   uri: "mongodb://admin:adminpassword@localhost/user_game_events_db?authSource=admin",
-  pool_size: 10,
+  pool_size: 5,
   timeout: 60_000,
   idle_interval: 10_000,
   queue_target: 5_000
+
+config :vortex_pub_sub, VortexPubSub.PostgresRepo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "postgres",
+  password: "postgres",
+  database: "dbname_dev",
+  hostname: "localhost",
+  pool_size: 5
 
 # if File.exists?(env_config) do
 #   import_config(env_config)
