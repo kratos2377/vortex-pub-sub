@@ -40,7 +40,10 @@ defmodule VortexPubSub do
     [
       {:_,
        [
-         {"/socket", VortexPubSub.Cygnus.UserSocket, []},
+         {"/socket", VortexPubSub.Cygnus.UserSocket, [
+          websocket: true,
+          longpoll: true
+          ]},
          {:_, Plug.Cowboy.Handler, {Hypernova, []}}
        ]}
     ]

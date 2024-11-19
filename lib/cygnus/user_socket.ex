@@ -6,6 +6,7 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
   channel "game:chess:*", VortexPubSub.Cygnus.ChessGameChannel
   transport :websocket, Phoenix.Transports.WebSocket
+  transport :longpoll, Phoenix.Transports.LongPoll
 
   def connect(%{"token" => token, "user_id" => user_id, "username" => username}, socket) do
     case Token.verify(socket, "user_connection", token: 1_209_600) do
