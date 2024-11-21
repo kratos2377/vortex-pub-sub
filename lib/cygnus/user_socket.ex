@@ -3,6 +3,7 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   alias Phoenix.Token
   alias VortexPubSub.KafkaProducer
   alias VortexPubSub.Constants
+  alias Holmberg.Mutation.User, as: UserMutation
 
   channel "game:chess:*", VortexPubSub.Cygnus.ChessGameChannel
   transport :websocket, Phoenix.Transports.WebSocket
@@ -12,8 +13,15 @@ defmodule VortexPubSub.Cygnus.UserSocket do
     case Token.verify(socket, "user_connection", token: 1_209_600) do
       {:ok, user_id} ->
         user_connection_event_payload = %{user_id: user_id , username: username}
-       KafkaProducer.send_message(Constants.kafka_user_topic() , user_connection_event_payload, Constants.kafka_user_online_event_key())
-        {:ok , assign(socket, :user_id, user_id)}
+        case UserMutation.set_user_online(user_id, true) do
+          {:ok , _} ->
+            KafkaProducer.send_message(Constants.kafka_user_topic() , user_connection_event_payload, Constants.kafka_user_online_event_key())
+            {:ok , assign(socket, :user_id, user_id)}
+
+          {:error, _} -> :error
+        end
+
+
 
       {:error, _reason} -> :error
     end
