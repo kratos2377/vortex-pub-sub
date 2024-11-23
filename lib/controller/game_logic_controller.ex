@@ -510,9 +510,12 @@ defmodule VortexPubSub.GameLogicController do
   end
 
 
-  post "/stake_in_game" do
+  # post "/stake_in_game" do
+  #   %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "username" => username} = conn.body_params
 
-  end
+
+
+  # end
 
 
 end
