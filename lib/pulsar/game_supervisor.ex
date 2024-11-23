@@ -14,7 +14,7 @@ defmodule Pulsar.GameSupervisorApplication do
       {Registry, keys: :unique, name: VortexPubSub.Pulsar.ScribbleRegistry},
       {Registry, keys: :unique, name: VortexPubSub.Pulsar.PokerRegistry},
       Pulsar.ChessSupervisor,
-      # Pulsar.ScribbleSupervisor,
+      Pulsar.ScribbleSupervisor,
       # Pulsar.PokerSupervisor,
     ]
 

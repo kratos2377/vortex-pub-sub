@@ -3,7 +3,9 @@ defmodule VortexPubSub.GameLogicController do
   use Plug.Router
 
   alias Pulsar.ChessSupervisor
+  alias Pulsar.ScribbleSupervisor
   alias MaelStorm.ChessServer
+  alias MealStorm.ScrribleServer
   alias Holmberg.Mutation.Game, as: GameMutation
   alias VortexPubSub.Constants
   alias JsonResult
@@ -41,6 +43,24 @@ defmodule VortexPubSub.GameLogicController do
             )
 
        end
+
+       "scribble" -> case GameMutation.create_new_game(conn) do
+        {:ok , game_id} -> ScribbleSupervisor.start_game(game_id , user_id , username)
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          200,
+          Jason.encode!(%{result: %{ success: true} , game_id: "#{game_id}"})
+        )
+        {:error, message} ->
+          conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false}, error_message: message})
+          )
+
+     end
         _ ->
           conn
           |> put_resp_content_type("application/json")
@@ -87,6 +107,36 @@ defmodule VortexPubSub.GameLogicController do
           Jason.encode!(%{result: %{ success: false},  error_message: Constants.game_not_found()})
         )
       end
+
+      "scribble" -> case ScribbleServer.game_pid(game_id) do
+        pid when is_pid(pid) ->
+          res = ScribbleServer.join_lobby(game_id, user_id, username)
+
+          case GameMutation.join_lobby(game_id , res) do
+            {:ok, _} -> conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              200,
+              Jason.encode!(%{result: %{ success: true}})
+            )
+              _ ->
+                _res_leave = ScribbleServer.leave_lobby(game_id, user_id)
+                conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(JsonResult.create_error_struct(Constants.error_while_joining_lobby()))
+        )
+          end
+        nil ->
+          conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: Constants.game_not_found()})
+        )
+      end
+
         _ -> conn
         |> put_resp_content_type("application/json")
         |> send_resp(
@@ -104,6 +154,34 @@ defmodule VortexPubSub.GameLogicController do
       "chess" -> case ChessServer.game_pid(game_id) do
         pid when is_pid(pid) ->
           res = ChessServer.leave_lobby(game_id, user_id)
+
+          case GameMutation.leave_lobby(game_id , res) do
+            {:ok, _} -> conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              200,
+              Jason.encode!(%{result: %{ success: true}})
+            )
+              _ ->
+                conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(JsonResult.create_error_struct(Constants.error_while_joining_lobby()))
+        )
+          end
+        nil ->
+          conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: Constants.game_not_found()})
+        )
+      end
+
+      "scribble" -> case ScribbleServer.game_pid(game_id) do
+        pid when is_pid(pid) ->
+          res = ScribbleServer.leave_lobby(game_id, user_id)
 
           case GameMutation.leave_lobby(game_id , res) do
             {:ok, _} -> conn
@@ -160,6 +238,25 @@ defmodule VortexPubSub.GameLogicController do
             )
         end
 
+
+        "scribble" -> case GameMutation.destroy_lobby_and_game(conn) do
+          {:ok , _} -> ScribbleSupervisor.stop_game(game_id)
+
+          conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            200,
+            Jason.encode!(%{result: %{ success: true}})
+          )
+
+            _ -> conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              400,
+              Jason.encode!(JsonResult.create_error_struct(Constants.error_while_destroying_lobby()))
+            )
+        end
+
           _ -> conn
           |> put_resp_content_type("application/json")
           |> send_resp(
@@ -174,6 +271,22 @@ defmodule VortexPubSub.GameLogicController do
 
     case game_name do
       "chess" -> ChessServer.update_player_status(game_id , user_id , status)
+
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true}})
+      )
+
+      _ -> conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(
+        400,
+        Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+      )
+
+      "scribble" -> ScribbleServer.update_player_status(game_id , user_id , status)
 
       conn
       |> put_resp_content_type("application/json")
@@ -230,12 +343,45 @@ defmodule VortexPubSub.GameLogicController do
        end
 
 
-      _ -> conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(
-        400,
-        Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
-      )
+
+      "scribble" ->
+        res =   ScribbleServer.start_game(game_id)
+
+        case res do
+          "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
+            {:ok, _} ->
+
+             KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id}, Constants.kafka_game_general_event_key())
+
+             conn
+             |> put_resp_content_type("application/json")
+             |> send_resp(
+               200,
+               Jason.encode!(%{result: %{ success: true}})
+             )
+
+             _ -> conn
+             |> put_resp_content_type("application/json")
+             |> send_resp(
+               400,
+               Jason.encode!(%{result: %{ success: false},  error_message: Constants.error_while_updating_mongo_entities()})
+             )
+          end
+           "error" -> conn
+           |> put_resp_content_type("application/json")
+           |> send_resp(
+             400,
+             Jason.encode!(%{result: %{ success: false},  error_message: Constants.all_players_not_ready()})
+           )
+        end
+
+
+       _ -> conn
+       |> put_resp_content_type("application/json")
+       |> send_resp(
+         400,
+         Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+       )
     end
 
 
@@ -287,6 +433,26 @@ defmodule VortexPubSub.GameLogicController do
           400,
           Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game Type"})
         )
+
+        "scribble" -> case ScribbleServer.game_pid(game_id) do
+          pid when is_pid(pid) ->   conn |>  put_resp_content_type("application/json")
+          |> send_resp(
+            200,
+            Jason.encode!(%{result: %{ success: true}})
+          )
+
+          nil -> conn |>  put_resp_content_type("application/json")
+          |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game"})
+          )
+
+          end
+          _ ->  conn |>  put_resp_content_type("application/json")
+          |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game Type"})
+          )
     end
   end
 
