@@ -1,6 +1,5 @@
 defmodule Holmberg.Mutation.User do
 import Ecto.Query, warn: false
-use Ecto.Schemas
 
 alias Holmberg.Schemas.UserModel
 alias VortexPubSub.PostgresRepo

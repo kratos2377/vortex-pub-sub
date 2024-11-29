@@ -21,6 +21,8 @@ defmodule Holmberg.Schemas.GameModel do
     field :staked_money_state, :string   # Assuming StakedUsers is a complex type
     field :poker_state, :string         # Assuming PokerState is a complex type
     field :scribble_state, :string         # Assuming ScribbleState is a complex type
+    field :created_at, :utc_datetime_usec
+    field :updated_at, :utc_datetime_usec
   end
 
 

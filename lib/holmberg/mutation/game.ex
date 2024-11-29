@@ -120,6 +120,8 @@ defmodule Holmberg.Mutation.Game do
       staked_money_state: "",
       poker_state: "",
       scribble_state: "",
+      created_at: DateTime.now!("Etc/UTC"),
+      updated_at: DateTime.now!("Etc/UTC")
     }
     game_model
   end
