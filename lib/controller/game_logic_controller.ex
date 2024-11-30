@@ -21,6 +21,14 @@ defmodule VortexPubSub.GameLogicController do
   plug(:match)
   plug(:dispatch)
 
+
+defimpl Jason.Encoder, for: BSON.ObjectId do
+  def encode(val, _opts \\ []) do
+    BSON.ObjectId.encode!(val)
+    |> Jason.encode!()
+  end
+end
+
   post "/create_lobby" do
      %{"user_id" => user_id, "username" => username, "game_type" => game_type, "game_name" => game_name} = conn.body_params
 
@@ -395,11 +403,19 @@ defmodule VortexPubSub.GameLogicController do
       limit: 1
     ]
     case Mongo.find_one(:mongo, "user_turns", %{game_id: game_id}, options ) do
-       user_turns -> conn |>  put_resp_content_type("application/json")
+
+      nil -> conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true},  user_turns: []})
+      )
+
+      user_turns -> conn |>  put_resp_content_type("application/json")
       |> send_resp(
         200,
         Jason.encode!(%{result: %{ success: true},  user_turns: user_turns})
       )
+
 
       _ ->  conn |>  put_resp_content_type("application/json")
       |> send_resp(
@@ -460,7 +476,7 @@ defmodule VortexPubSub.GameLogicController do
     %{"game_id" => game_id, "host_user_id"=> host_user_id} = conn.body_params
 
     case Mongo.find(:mongo, "users", %{game_id: game_id}) do
-      {:ok , user_cursor} ->
+       user_cursor ->
         user_list = user_cursor |> Enum.to_list()
         conn |>  put_resp_content_type("application/json")
       |> send_resp(

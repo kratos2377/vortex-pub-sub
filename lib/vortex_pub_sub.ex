@@ -19,7 +19,7 @@ defmodule VortexPubSub do
         scheme: :http,
         plug: Hypernova,
         options: [
-          port: String.to_integer("4000"),
+          port: String.to_integer("4001"),
           dispatch: dispatch(),
           protocol_options: [idle_timeout: :infinity]
         ]
