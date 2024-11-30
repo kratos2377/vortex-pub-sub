@@ -8,6 +8,7 @@ defmodule VortexPubSub do
     children = [
       {Registry, keys: :unique, name: VortexPubSub.Registry},
       {Registry, keys: :unique, name: VortexPubSub.UserRegistry},
+      #{Registry, keys: :unique, name: VortexPubSub.Pulsar.ChessRegistry},
    #   Pulsar.UserSupervisor,
       Pulsar.GameSupervisorApplication,
       {Phoenix.PubSub, name: VortexPubSub.PubSub},
@@ -26,6 +27,7 @@ defmodule VortexPubSub do
       )
     ]
 
+    #:ets.new(:games_table, [:public, :named_table])
     opts = [strategy: :one_for_one, name: VortexPubSub.Supervisor]
     case Supervisor.start_link(children, opts) do
       {:ok , pid} -> IO.puts("Application Started")

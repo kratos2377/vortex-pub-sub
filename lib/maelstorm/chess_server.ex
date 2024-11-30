@@ -44,8 +44,8 @@ defmodule MaelStorm.ChessServer do
 
     #Server Callbacks
 
-    def init(%ChessState{} = chess_state) do
-      Logger.info("Spawned ChessGameServer with pid='#{self()}' and game_id='#{chess_state.game_id}'")
+    def init({chess_state}) do
+      #Logger.info("Spawned ChessGameServer with pid='#{self()}' and game_id='#{chess_state.game_id}'")
       {:ok , chess_state}
     end
 

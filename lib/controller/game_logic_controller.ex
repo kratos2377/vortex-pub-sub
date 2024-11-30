@@ -1,7 +1,7 @@
 defmodule VortexPubSub.GameLogicController do
   import Plug.Conn
   use Plug.Router
-
+  require Logger
   alias Pulsar.ChessSupervisor
   alias Pulsar.ScribbleSupervisor
   alias MaelStorm.ChessServer
@@ -35,7 +35,12 @@ end
 
    case game_name do
        "chess" -> case GameMutation.create_new_game(conn) do
-          {:ok , game_id} -> ChessSupervisor.start_game(game_id , user_id , username)
+          {:ok , game_id} ->
+            case ChessSupervisor.start_game(game_id , user_id , username) do
+              {:ok , _} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
+              {:error , message} -> Logger.info("Error while spawning ChessProcess for '#{game_id}'. with some error '#{message}'")
+            end
+
           conn
           |> put_resp_content_type("application/json")
           |> send_resp(
