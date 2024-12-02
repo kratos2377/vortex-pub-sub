@@ -16,15 +16,16 @@ defmodule VortexPubSub do
       worker(Mongo, [[name: :mongo, url: "mongodb://admin:adminpassword@localhost/user_game_events_db?authSource=admin", pool_size: 5]]),
      # {VortexPubSub.MongoRepo , []},
      VortexPubSub.PostgresRepo,
-      Plug.Cowboy.child_spec(
-        scheme: :http,
-        plug: Hypernova,
-        options: [
-          port: String.to_integer("4001"),
-          dispatch: dispatch(),
-          protocol_options: [idle_timeout: :infinity]
-        ]
-      )
+      # Plug.Cowboy.child_spec(
+      #   scheme: :http,
+      #   plug: Hypernova,
+      #   options: [
+      #     port: String.to_integer("4001"),
+      #     dispatch: dispatch(),
+      #     protocol_options: [idle_timeout: :infinity]
+      #   ]
+      # )
+      VortexPubSub.Endpoint
     ]
 
     #:ets.new(:games_table, [:public, :named_table])
@@ -38,18 +39,18 @@ defmodule VortexPubSub do
     end
   end
 
-  defp dispatch do
-    [
-      {:_,
-       [
-         {"/socket", VortexPubSub.Cygnus.UserSocket, [
-          websocket: true,
-          longpoll: true
-          ]},
-         {:_, Plug.Cowboy.Handler, {Hypernova, []}}
-       ]}
-    ]
-  end
+  # defp dispatch do
+  #   [
+  #     {:_,
+  #      [
+  #        {"/socket/websocket", VortexPubSub.Cygnus.UserSocket, [
+  #         websocket: true,
+  #         longpoll: false
+  #         ]},
+  #        {:_, Plug.Cowboy.Handler, {Hypernova, []}}
+  #      ]}
+  #   ]
+  # end
 
 
 end

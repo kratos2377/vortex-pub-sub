@@ -7,7 +7,7 @@ alias VortexPubSub.PostgresRepo
   def set_user_online(user_id , is_online) do
     user_id
     |> get_user_by_id()
-    |> set_is_online_changeset(is_online)
+    |> UserModel.edit_changeset(%{is_online: true})
     |> PostgresRepo.update()
   end
 
@@ -20,22 +20,13 @@ alias VortexPubSub.PostgresRepo
 
 
 
-  def set_is_online_changeset(user , is_online) do
-    new_user_model = %{
-      id: user.id,
-      username: user.username,
-      password: user.password,
-      email: user.email,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      verified: user.verified,
-      score: user.score,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-      is_online: is_online
-    }
+  # def set_is_online_changeset(user , is_online) do
 
-    new_user_model
-  end
+
+  #   new_user_model
+
+  #   IO.inspect("NEW MODEL IS")
+  #   IO.inspect(new_user_model)
+  # end
 
 end

@@ -96,7 +96,7 @@ end
         pid when is_pid(pid) ->
           res = ChessServer.join_lobby(game_id, user_id, username)
 
-          case GameMutation.join_lobby(game_id , res) do
+          case GameMutation.join_lobby(conn , res) do
             {:ok, _} -> conn
             |> put_resp_content_type("application/json")
             |> send_resp(
@@ -125,7 +125,7 @@ end
         pid when is_pid(pid) ->
           res = ScribbleServer.join_lobby(game_id, user_id, username)
 
-          case GameMutation.join_lobby(game_id , res) do
+          case GameMutation.join_lobby(conn , res) do
             {:ok, _} -> conn
             |> put_resp_content_type("application/json")
             |> send_resp(
@@ -167,8 +167,9 @@ end
       "chess" -> case ChessServer.game_pid(game_id) do
         pid when is_pid(pid) ->
           res = ChessServer.leave_lobby(game_id, user_id)
-
-          case GameMutation.leave_lobby(game_id , res) do
+          IO.puts("Leave Lobby Elixir Result")
+          IO.inspect(res)
+          case GameMutation.leave_lobby(conn , res) do
             {:ok, _} -> conn
             |> put_resp_content_type("application/json")
             |> send_resp(
@@ -196,7 +197,7 @@ end
         pid when is_pid(pid) ->
           res = ScribbleServer.leave_lobby(game_id, user_id)
 
-          case GameMutation.leave_lobby(game_id , res) do
+          case GameMutation.leave_lobby(conn , res) do
             {:ok, _} -> conn
             |> put_resp_content_type("application/json")
             |> send_resp(

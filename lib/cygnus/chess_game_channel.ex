@@ -5,6 +5,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   alias VortexPubSub.Constants
 
   def join("game:chess:" <> game_id, _params, socket) do
+    IO.puts("Received join message")
     case ChessServer.game_pid(game_id) do
       pid when is_pid(pid) ->  {:ok, socket}
 

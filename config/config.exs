@@ -39,6 +39,30 @@ config :vortex_pub_sub, VortexPubSub.MongoRepo,
 
 config :vortex_pub_sub, VortexPubSub.PostgresRepo, url: database_url
 
+
+config :vortex_pub_sub, VortexPubSub.Endpoint,
+  # Binding to loopback ipv4 address prevents access from other machines.
+  # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
+  http: [ip: {0, 0, 0, 0}, port: 4001],
+  debug_errors: true,
+  secret_key_base: "new-jwt-secret-token",
+  # code_reloader: true,
+  check_origin: false,
+  watchers: [
+    # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
+    # esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
+    # tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
+
+    # npx: [
+    #    "tailwindcss",
+    #    "--input=css/app.css",
+    #    "--output=../priv/static/assets/app.css",
+    #    "--postcss",
+    #    "--watch",
+    #    cd: Path.expand("../assets", __DIR__)
+    #  ]
+  ]
+
 # if File.exists?(env_config) do
 #   import_config(env_config)
 # end
