@@ -51,7 +51,7 @@ defmodule Holmberg.Mutation.Game do
           case Mongo.insert_one(:mongo, "users", user_join_changeset) do
             {:ok, _} ->
               game_count_inc_doc = %{"$inc": %{user_count: 1}}
-              case Mongo.update_one(:mongo, "games" , game_count_inc_doc) do
+              case Mongo.update_one(:mongo, "games" , %{id: params["game_id"]}, game_count_inc_doc) do
                 {:ok , _} -> {:ok, :lobby_joined}
                 _ -> {:error , :error_while_joining_lobby}
 

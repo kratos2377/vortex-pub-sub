@@ -8,8 +8,8 @@ defmodule VortexPubSub.Endpoint do
   ]
 
   socket "/socket", VortexPubSub.Cygnus.UserSocket,
-    websocket: [connect_info: [session: @session_options]],
-    longpoll: [connect_info: [session: @session_options]]
+    websocket: true,
+    longpoll: false
 
 
 

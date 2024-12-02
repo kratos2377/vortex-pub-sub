@@ -48,6 +48,7 @@ config :vortex_pub_sub, VortexPubSub.Endpoint,
   secret_key_base: "new-jwt-secret-token",
   # code_reloader: true,
   check_origin: false,
+  pubsub: [name: VortexPubSub.PubSub],
   watchers: [
     # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
     # esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
