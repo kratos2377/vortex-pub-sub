@@ -11,10 +11,10 @@ defmodule Pulsar.GameSupervisorApplication do
     children = [
 
       {Registry, keys: :unique, name: VortexPubSub.Pulsar.ChessRegistry},
-      {Registry, keys: :unique, name: VortexPubSub.Pulsar.ScribbleRegistry},
-      {Registry, keys: :unique, name: VortexPubSub.Pulsar.PokerRegistry},
+      #{Registry, keys: :unique, name: VortexPubSub.Pulsar.ScribbleRegistry},
+      #{Registry, keys: :unique, name: VortexPubSub.Pulsar.PokerRegistry},
       Pulsar.ChessSupervisor,
-      Pulsar.ScribbleSupervisor,
+      #Pulsar.ScribbleSupervisor,
       # Pulsar.PokerSupervisor,
     ]
 

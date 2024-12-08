@@ -16,6 +16,13 @@ defmodule VortexPubSub.Constants do
   def kafka_error_event_key, do: "error-event"
   def kafka_user_game_move_event_key, do: "user-game-move"
   def kafka_game_general_event_key, do: "game-general-event"
+  def kafka_game_invite_event_key, do: "game-invite-event"
+  def kafka_remove_all_users_key, do: "remove-all-users"
+
+  #Mongo Collections
+  def mongo_users_collection_key, do: "users"
+  def mongo_games_collection_key, do: "games"
+  def mongo_user_turns_collection_key, do: "user_turns"
 
 
   #Error Constants

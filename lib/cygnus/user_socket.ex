@@ -6,7 +6,9 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   alias Holmberg.Mutation.User, as: UserMutation
 
   channel "game:chess:*", VortexPubSub.Cygnus.ChessGameChannel
-
+  channel "user:*", VortexPubSub.Cygnus.UserNotificationChannel
+  channel "game:spectate:chess:*", VortexPubSub.Cygnus.ChessSpectateChannel
+  transport :websocket, Phoenix.Transports.WebSocket
   @impl true
   def connect(%{"token" => token , "user_id" => user_id , "username" => username}, socket) do
 
@@ -29,7 +31,7 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   end
 
   @impl true
-  def id(socket), do: nil
+  def id(socket), do: "users_socket:#{socket.assigns.user_id}"
 
 
 

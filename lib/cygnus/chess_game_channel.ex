@@ -6,15 +6,11 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   alias VortexPubSub.Constants
 
   def join("game:chess:" <> game_id, _params, socket) do
-    IO.puts("Received join message from user ")
     case ChessServer.game_pid(game_id) do
       pid when is_pid(pid) ->
-        #send(self(), {:after_join, %{}})
-        IO.puts("Channel Joinin Successful")
         {:ok, socket}
 
       nil ->
-        IO.puts("ERROR WHILE JOINING CHANNEL")
         {:error, %{reason: "Game does not exist"}}
 
       _ -> IO.puts("Some other error ")
@@ -22,10 +18,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     end
   end
 
-  # def handle_info({:after_join, _params}, socket) do
-  #   push(socket, "ping", %{})
-  #   {:noreply, socket}
-  # end
+
 
   def handle_in("joined-room", %{"user_id" => user_id, "username" => username}, socket) do
     #Add logic to prevent user from joining if the game is in progress
@@ -35,8 +28,10 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
     #Send Current turn mappings of game to joined user
 
-    KafkaProducer.send_message(Constants.kafka_user_topic(), %{user_id: user_id, username: username, game_id: game_id} ,
-      Constants.kafka_user_joined_event_key())
+    # KafkaProducer.send_message(Constants.kafka_user_topic(), %{user_id: user_id, username: username, game_id: game_id} ,
+    #   Constants.kafka_user_joined_event_key())
+
+    broadcast_from!(self() , "game:spectate:chess:"<>game_id , "new-user-joined" ,  %{user_id: user_id, username: username, game_id: game_id})
 
     {:noreply, socket}
   end
@@ -46,20 +41,22 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     if player_type == "host" do
 
     broadcast!(socket, "remove-all-users", %{user_id: user_id, username: username, game_id: game_id, player_type: player_type})
-    KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "host-left", game_id: game_id}, Constants.kafka_game_general_event_key())
-
+    broadcast_from!(self() , "game:spectate:chess:"<>game_id , "remove-all-users" ,  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
     else
       broadcast!(socket, "user-left-room", %{user_id: user_id, username: username, game_id: game_id, player_type: player_type})
+      broadcast_from!(self() , "game:spectate:chess:"<>game_id , "user-left-room" ,  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
     end
 
-    KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type}, Constants.kafka_user_left_room_event_key())
+    #KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type}, Constants.kafka_user_left_room_event_key())
     {:noreply,socket}
 
   end
 
   def handle_in("update-user-status-in-room", %{"user_id" => user_id, "username" => username, "game_id" => game_id, "status" => status} ,socket) do
     broadcast!(socket, "user-status-update", %{user_id: user_id, username: username, game_id: game_id, status: status}  )
-    KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, username: username, game_id: game_id, status: status}, Constants.kafka_user_status_event_key())
+    #KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, username: username, game_id: game_id, status: status}, Constants.kafka_user_status_event_key())
+
+    broadcast_from!(self() , "game:spectate:chess:"<>game_id , "user-status-update" ,   %{user_id: user_id, username: username, game_id: game_id, status: status} )
     {:noreply,socket}
   end
 
@@ -73,13 +70,16 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
          move_type: event_type,
       }
 
-    KafkaProducer.send_message(Constants.kafka_user_game_events_topic(),  %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type}, Constants.kafka_user_game_move_event_key())
+
+      broadcast_from!(self() , "game:spectate:chess:"<>game_id , "game-event" ,   %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type} )
+      KafkaProducer.send_message(Constants.kafka_user_game_events_topic(),  %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type}, Constants.kafka_user_game_move_event_key())
     {:noreply,socket}
   end
 
   def handle_in("verifying-game-status", %{"user_id" => user_id, "game_id" => game_id} , socket) do
     broadcast!(socket, "verifying-game", %{user_id: user_id , game_id: game_id} )
-    KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
+    #KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
+    broadcast_from!(self() , "game:spectate:chess:"<>game_id , "verifying-game" ,  %{user_id: user_id , game_id: game_id} )
     {:noreply,socket}
   end
 

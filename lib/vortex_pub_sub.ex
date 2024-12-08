@@ -16,7 +16,19 @@ defmodule VortexPubSub do
       worker(Mongo, [[name: :mongo, url: "mongodb://admin:adminpassword@localhost/user_game_events_db?authSource=admin", pool_size: 5]]),
      # {VortexPubSub.MongoRepo , []},
      VortexPubSub.PostgresRepo,
-      VortexPubSub.Endpoint
+      VortexPubSub.Endpoint,
+      %{
+        id: KafkaEx.ConsumerGroup,
+        start: {
+          KafkaEx.ConsumerGroup,
+          :start_link,
+          [VortexPubSub.KafkaConsumer, "vortex-matchmaking", ["users_matchmaking", "user" , "game"], [
+            heartbeat_interval: 1000,
+            commit_interval: 1000
+          ]]
+        }
+      }
+
     ]
 
     #:ets.new(:games_table, [:public, :named_table])

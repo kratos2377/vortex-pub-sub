@@ -37,8 +37,9 @@ defmodule VortexPubSub.MixProject do
       {:timex, "~> 3.7"},
       {:kafka_ex, "~> 0.13.0"},
       {:mongodb_driver, "~> 1.4"},
-      {:guardian, "~> 2.3"}
-
+      {:guardian, "~> 2.3"},
+      {:httpoison, "~> 2.2"},
+      {:joken, "~> 2.6"}
     ]
   end
 
