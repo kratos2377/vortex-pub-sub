@@ -1,14 +1,15 @@
 defmodule VortexPubSub.KafkaConsumer do
-  use KafkaEx.GenConsumer
+
+
   require Logger
 
 
-  def handle_message_set(message_set, state) do
-    for %Message{value: message} <- message_set do
-      Logger.info(fn -> "message: " <> inspect(message) end)
-
-
+  def handle_messages(messages) do
+    for %{key: key, value: value} = message <- messages do
+      IO.inspect message
+      IO.puts "#{key}: #{value}"
     end
-    {:async_commit, state}
+    :ok # Important!
   end
+
 end

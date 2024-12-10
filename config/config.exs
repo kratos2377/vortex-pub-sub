@@ -4,30 +4,19 @@ database_url =
   System.get_env("DATABASE_URL") ||
     "postgres://postgres:secret@localhost:5432/vortex"
 
-config :kafka_ex,
+config :kafka_ex, log_level: :debug,
 brokers: [
   {"localhost", 9092}
 ],
-consumer_group: "kafka_ex",
+consumer_group: "vortex",
 client_id: "kafka_ex",
-sync_timeout: 3000,
 max_restarts: 5,
 max_seconds: 30,
 commit_interval: 5_000,
 commit_threshold: 100,
 auto_offset_reset: :none,
 sleep_for_reconnect: 600,
-use_ssl: false,
-# ssl_options: [
-#   # Fix warnings. More at https://github.com/erlang/otp/issues/5352
-#   verify: :verify_none,
-#   cacertfile: File.cwd!() <> "/ssl/ca-cert",
-#   certfile: File.cwd!() <> "/ssl/cert.pem",
-#   keyfile: File.cwd!() <> "/ssl/key.pem"
-# ],
-snappy_module: :snappyer,
-kafka_version: "0.10.1"
-env_config = Path.expand("#{Mix.env()}.exs", __DIR__)
+use_ssl: false
 
 
 config :vortex_pub_sub, VortexPubSub.MongoRepo,
@@ -39,6 +28,24 @@ config :vortex_pub_sub, VortexPubSub.MongoRepo,
 
 config :vortex_pub_sub, VortexPubSub.PostgresRepo, url: database_url
 
+
+config :kaffe,
+  consumer: [
+    endpoints: [localhost: 9092],
+    topics: ["user"],
+    consumer_group: "vortex",
+    message_handler: VortexPubSub.KafkaConsumer,
+    offset_reset_policy: :reset_to_latest,
+    max_bytes: 500_000,
+    worker_allocation_strategy: :worker_per_topic_partition,
+
+    #optional
+    sasl: %{
+      mechanism: :plain,
+      login: System.get_env("KAFFE_PRODUCER_USER"),
+      password: System.get_env("KAFFE_PRODUCER_PASSWORD")
+    }
+  ]
 
 config :vortex_pub_sub, VortexPubSub.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.

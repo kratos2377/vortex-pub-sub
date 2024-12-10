@@ -2,6 +2,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   use VortexPubSubWeb, :channel
   alias MaelStorm.ChessServer
   alias VortexPubSub.Presence
+  alias VortexPubSub.Endpoint
   alias VortexPubSub.KafkaProducer
   alias VortexPubSub.Constants
 
@@ -31,7 +32,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     # KafkaProducer.send_message(Constants.kafka_user_topic(), %{user_id: user_id, username: username, game_id: game_id} ,
     #   Constants.kafka_user_joined_event_key())
 
-    broadcast_from!(self() , "game:spectate:chess:"<>game_id , "new-user-joined" ,  %{user_id: user_id, username: username, game_id: game_id})
+    Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "new-user-joined" ,  %{user_id: user_id, username: username, game_id: game_id})
 
     {:noreply, socket}
   end
@@ -41,10 +42,10 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     if player_type == "host" do
 
     broadcast!(socket, "remove-all-users", %{user_id: user_id, username: username, game_id: game_id, player_type: player_type})
-    broadcast_from!(self() , "game:spectate:chess:"<>game_id , "remove-all-users" ,  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
+    Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "remove-all-users" ,  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
     else
       broadcast!(socket, "user-left-room", %{user_id: user_id, username: username, game_id: game_id, player_type: player_type})
-      broadcast_from!(self() , "game:spectate:chess:"<>game_id , "user-left-room" ,  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
+      Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "user-left-room" ,  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
     end
 
     #KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type}, Constants.kafka_user_left_room_event_key())
@@ -56,7 +57,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     broadcast!(socket, "user-status-update", %{user_id: user_id, username: username, game_id: game_id, status: status}  )
     #KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, username: username, game_id: game_id, status: status}, Constants.kafka_user_status_event_key())
 
-    broadcast_from!(self() , "game:spectate:chess:"<>game_id , "user-status-update" ,   %{user_id: user_id, username: username, game_id: game_id, status: status} )
+    Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "user-status-update" ,   %{user_id: user_id, username: username, game_id: game_id, status: status} )
     {:noreply,socket}
   end
 
@@ -71,7 +72,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
       }
 
 
-      broadcast_from!(self() , "game:spectate:chess:"<>game_id , "game-event" ,   %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type} )
+      Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "game-event" ,   %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type} )
       KafkaProducer.send_message(Constants.kafka_user_game_events_topic(),  %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type}, Constants.kafka_user_game_move_event_key())
     {:noreply,socket}
   end
@@ -79,7 +80,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   def handle_in("verifying-game-status", %{"user_id" => user_id, "game_id" => game_id} , socket) do
     broadcast!(socket, "verifying-game", %{user_id: user_id , game_id: game_id} )
     #KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
-    broadcast_from!(self() , "game:spectate:chess:"<>game_id , "verifying-game" ,  %{user_id: user_id , game_id: game_id} )
+    Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "verifying-game" ,  %{user_id: user_id , game_id: game_id} )
     {:noreply,socket}
   end
 

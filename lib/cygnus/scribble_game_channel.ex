@@ -11,20 +11,20 @@ defmodule VortexPubSub.Cygnus.ScribbleGameChannel do
   end
 
 
-  def handle_in("game_event", %{"user_id" => user_id , "game_event" => game_event , "game_id" => game_id , "event_type" => event_type} , socket) do
-    broadcast!(socket , "update-canvas-state" , %{drawOptions: game_event})
-    {:noreply , socket}
-  end
+  # def handle_in("game_event", %{"user_id" => user_id , "game_event" => game_event , "game_id" => game_id , "event_type" => event_type} , socket) do
+  #   broadcast!(socket , "update-canvas-state" , %{drawOptions: game_event})
+  #   {:noreply , socket}
+  # end
 
-  def handle_in("undo" , %{"canvas_state" => canvas_state } , socket) do
-    broadcast!(socket , "undo-canvas" , %{canvas_state: canvas_state})
-    {:noreply , socket}
-  end
+  # def handle_in("undo" , %{"canvas_state" => canvas_state } , socket) do
+  #   broadcast!(socket , "undo-canvas" , %{canvas_state: canvas_state})
+  #   {:noreply , socket}
+  # end
 
 
-  def handle_in("word_guess" , %{"user_id" => user_id , "username" => username , "word" => word , "game_id" => game_id}) do
+  # def handle_in("word_guess" , %{"user_id" => user_id , "username" => username , "word" => word , "game_id" => game_id}) do
 
-  end
+  # end
 
   defp current_player(socket) do
       socket.assigns.current_player

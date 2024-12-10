@@ -1,6 +1,6 @@
 defmodule VortexPubSub do
   use Application
-
+  import Supervisor.Spec
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
@@ -17,16 +17,11 @@ defmodule VortexPubSub do
      # {VortexPubSub.MongoRepo , []},
      VortexPubSub.PostgresRepo,
       VortexPubSub.Endpoint,
+
       %{
-        id: KafkaEx.ConsumerGroup,
-        start: {
-          KafkaEx.ConsumerGroup,
-          :start_link,
-          [VortexPubSub.KafkaConsumer, "vortex-matchmaking", ["users_matchmaking", "user" , "game"], [
-            heartbeat_interval: 1000,
-            commit_interval: 1000
-          ]]
-        }
+        id: Kaffe.GroupMemberSupervisor,
+        start: {Kaffe.GroupMemberSupervisor, :start_link, []},
+        type: :supervisor
       }
 
     ]

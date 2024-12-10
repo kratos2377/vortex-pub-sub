@@ -11,6 +11,7 @@ defmodule VortexPubSub.GameLogicController do
   alias VortexPubSub.Constants
   alias JsonResult
   alias VortexPubSub.KafkaProducer
+  alias VortexPubSub.Endpoint
   plug(VortexPubSub.Hypernova.Cors)
 
   plug(Plug.Parsers,
@@ -533,6 +534,74 @@ end
   end
 
 
+  post "/send_game_invite_event" do
+    %{ "game_type" => game_type, "game_id" => game_id , "game_name" => game_name,
+  "user_receiving_id" => user_receiving_id ,  "user_sending_id" => user_sending_id,
+   "user_sending_username" => user_sending_username } = conn.body_params
+
+    user_invite_event = %{
+      user_who_send_request_id: user_sending_id,
+      user_who_send_request_username: user_sending_username,
+      user_who_we_are_sending_event: user_receiving_id,
+      game_id: game_id,
+      game_name: game_name,
+      game_type: game_type,
+
+    }
+
+    Endpoint.broadcast_from!("user:notifications:"<> user_receiving_id , Constants.kafka_game_invite_event_key() , user_invite_event)
+    conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true}})
+      )
+
+
+  end
+
+
+  post "/remove_game_models" do
+    %{"game_id" => game_id , "host_user_id" => host_user_id, "game_name" => game_name ,
+    "user_id" => user_id } = conn.body_params
+    case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
+      user_model -> case Mongo.delete(:mongo , "users" , %{user_id: user_id} ) do
+
+      {:ok , _} -> case user_model.player_type do
+        "host" -> case Mongo.delete(:mongo , "games" , %{host_id: host_user_id, id: game_id , name: game_name}) do
+          {:ok , _} ->  conn |>  put_resp_content_type("application/json")
+          |> send_resp(
+            200,
+            Jason.encode!(%{result: %{ success: true}, message: "All game and user models removed"})
+          )
+
+          _ -> conn |>  put_resp_content_type("application/json")
+          |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false}, message: "Error while deleting user module in mongo"})
+          )
+        end
+
+        _ ->  conn |>  put_resp_content_type("application/json")
+        |> send_resp(
+          200,
+          Jason.encode!(%{result: %{ success: true}, message: "User model removed"})
+        )
+      end
+        {:error , _} ->  conn |>  put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false}, message: "Error while deleting models in mongo"})
+        )
+
+      end
+        {:error , _} ->   conn |>  put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false}, message: "Error while deleting module in mongo"})
+        )
+    end
+  end
+
   # post "/stake_in_game" do
   #   %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "username" => username} = conn.body_params
 
@@ -549,11 +618,12 @@ end
           200,
           Jason.encode!(%{result: %{ success: true},  message: "Raised Matchmaking Ticket"})
         )
-        :error -> send_resp(
+        :error -> conn |> send_resp(
           400,
           Jason.encode!(%{result: %{ success: false},  error_message: "Error While Raising Matchmaking Ticker"})
         )
       end
   end
+
 
 end

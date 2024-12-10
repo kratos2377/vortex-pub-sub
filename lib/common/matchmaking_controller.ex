@@ -6,7 +6,7 @@ def start_user_matchmaking(user_id , score , game_type) do
 
   new_user_ticket_changeset = make_user_ticket_changeset(user_id , score , game_type)
 
-  case HTTPoison.post( @matchmaking_base_url <> matchmaking/tickets , new_user_ticket_changeset , %{"Content-Type": "application/json"} ) do
+  case HTTPoison.post( @matchmaking_base_url <> "matchmaking/tickets" , new_user_ticket_changeset , %{"Content-Type": "application/json"} ) do
     {:ok , _} -> :ok
     {:error , _} -> :error
   end

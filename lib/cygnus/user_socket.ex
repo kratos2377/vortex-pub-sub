@@ -6,7 +6,7 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   alias Holmberg.Mutation.User, as: UserMutation
 
   channel "game:chess:*", VortexPubSub.Cygnus.ChessGameChannel
-  channel "user:*", VortexPubSub.Cygnus.UserNotificationChannel
+  channel "user:notifications:*", VortexPubSub.Cygnus.UserNotificationChannel
   channel "game:spectate:chess:*", VortexPubSub.Cygnus.ChessSpectateChannel
   transport :websocket, Phoenix.Transports.WebSocket
   @impl true
