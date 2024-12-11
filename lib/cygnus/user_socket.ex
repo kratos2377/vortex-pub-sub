@@ -34,5 +34,11 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   def id(socket), do: "users_socket:#{socket.assigns.user_id}"
 
 
+  def terminate(reason , state) do
+    IO.puts("Socket disconnected. State is")
+    IO.inspect(state)
+  end
+
+
 
 end
