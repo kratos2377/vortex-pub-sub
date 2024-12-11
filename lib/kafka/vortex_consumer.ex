@@ -3,6 +3,8 @@ defmodule VortexPubSub.KafkaConsumer do
   @behaviour :brod_group_subscriber_v2
   require Logger
 
+  alias VortexPubSub.PublishMessages
+
   def start() do
     group_config = [
       offset_commit_policy: :commit_to_kafka_v2,
@@ -14,7 +16,7 @@ defmodule VortexPubSub.KafkaConsumer do
     config = %{
       client: :kafka_client,
       group_id: "vortex",
-      topics: ["user"],
+      topics: ["user" , "game"],
       cb_module: __MODULE__,
       group_config: group_config,
       consumer_config: [begin_offset: :earliest]
@@ -30,7 +32,22 @@ defmodule VortexPubSub.KafkaConsumer do
   end
 
   def handle_message(message, state) do
-    IO.inspect(message, label: "message")
+    case message do
+      {:kafka_message_set , topic , partition , _ , payload} ->
+        case Enum.at(payload , 0) do
+          {:kafka_message , _ , key , data , _ , _ , _} ->
+
+            case Jason.decode(data) do
+
+              {:ok , json_data} -> PublishMessages.publish_the_message(key, json_data)
+                _ -> Logger.error("Error while parsing json data")
+            end
+
+          _ -> IO.puts("Invalid Kafka data message")
+        end
+
+      _ -> Logger.warn("Invalid Message")
+    end
     {:ok, :commit, []}
   end
 
