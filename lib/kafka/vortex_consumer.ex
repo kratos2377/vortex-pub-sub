@@ -39,7 +39,9 @@ defmodule VortexPubSub.KafkaConsumer do
 
             case Jason.decode(data) do
 
-              {:ok , json_data} -> PublishMessages.publish_the_message(key, json_data)
+              {:ok , json_data} ->
+                res = Task.async(fn -> PublishMessages.publish_the_message(key, json_data) end)
+                Task.await(res)
                 _ -> Logger.error("Error while parsing json data")
             end
 

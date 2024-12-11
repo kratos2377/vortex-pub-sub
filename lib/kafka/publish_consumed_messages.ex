@@ -8,13 +8,23 @@ defmodule VortexPubSub.PublishMessages do
 
     case key do
 
+      Constants.kafka_game_invite_event_key() ->
+        topic = "user:notifications:" <> data.user_who_we_are_sending_event
+        start_async_publishing(topic , data , key)
+
+      Constants.kafka_friend_request_event_key() ->
+
+        topic = "user:notifications:"<>data.user_who_we_are_sending_event
+        start_async_publishing(topic , data , key)
+
+
       _ -> Logger.error("Invalid Key")
     end
 
   end
 
 
-  def start_async_publishing(topic , data) do
-
+  def start_async_publishing(topic , data , key) do
+    Endpoint.brodcast(topic , key , data)
   end
 end

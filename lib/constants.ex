@@ -8,7 +8,7 @@ defmodule VortexPubSub.Constants do
 
   #Kafka Key Constants
   def kafka_user_online_event_key, do: "user-online-event"
-  def kafka_friendd_request_event_key, do: "friend-request-event"
+  def kafka_friend_request_event_key, do: "friend-request-event"
   def kafka_user_joined_event_key, do: "user-joined-room"
   def kafka_user_left_room_event_key, do: "user-left-room"
   def kafka_user_status_event_key, do: "user-status-event"
