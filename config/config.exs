@@ -62,3 +62,6 @@ config :vortex_pub_sub, VortexPubSub.Endpoint,
 # if File.exists?(env_config) do
 #   import_config(env_config)
 # end
+
+config :vortex_pub_sub,
+joken_signer_key: "new-jwt-secret-token"
