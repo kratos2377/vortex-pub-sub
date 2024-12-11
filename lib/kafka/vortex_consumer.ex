@@ -23,6 +23,8 @@ defmodule VortexPubSub.KafkaConsumer do
     :brod.start_link_group_subscriber_v2(config)
   end
 
+
+  @impl :brod_group_subscriber_v2
   def init(_arg, _arg2) do
     {:ok, []}
   end

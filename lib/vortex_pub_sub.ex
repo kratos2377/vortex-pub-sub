@@ -17,7 +17,11 @@ defmodule VortexPubSub do
      # {VortexPubSub.MongoRepo , []},
      VortexPubSub.PostgresRepo,
       VortexPubSub.Endpoint,
-      VortexPubSub.KafkaConsumer
+
+      %{
+        id: VortexPubSub.KafkaConsumer,
+        start: {VortexPubSub.KafkaConsumer, :start, []}
+      }
 
     ]
 
