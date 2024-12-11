@@ -17,12 +17,7 @@ defmodule VortexPubSub do
      # {VortexPubSub.MongoRepo , []},
      VortexPubSub.PostgresRepo,
       VortexPubSub.Endpoint,
-
-      %{
-        id: Kaffe.GroupMemberSupervisor,
-        start: {Kaffe.GroupMemberSupervisor, :start_link, []},
-        type: :supervisor
-      }
+      VortexPubSub.KafkaConsumer
 
     ]
 

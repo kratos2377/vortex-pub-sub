@@ -15,7 +15,7 @@ defmodule VortexPubSub.MixProject do
   def application do
     [
       mod: {VortexPubSub, []},
-      extra_applications: [:logger, :ecto, :kaffe]
+      extra_applications: [:logger, :ecto]
     ]
   end
 
@@ -40,7 +40,7 @@ defmodule VortexPubSub.MixProject do
       {:guardian, "~> 2.3"},
       {:httpoison, "~> 2.2"},
       {:joken, "~> 2.6"},
-      {:kaffe, "~> 1.9"}
+      {:brod, "~> 4.3"}
     ]
   end
 

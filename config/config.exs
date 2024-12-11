@@ -28,23 +28,11 @@ config :vortex_pub_sub, VortexPubSub.MongoRepo,
 
 config :vortex_pub_sub, VortexPubSub.PostgresRepo, url: database_url
 
-
-config :kaffe,
-  consumer: [
-    endpoints: [localhost: 9092],
-    topics: ["user"],
-    consumer_group: "vortex",
-    message_handler: VortexPubSub.KafkaConsumer,
-    offset_reset_policy: :reset_to_latest,
-    max_bytes: 500_000,
-    worker_allocation_strategy: :worker_per_topic_partition,
-
-    #optional
-    sasl: %{
-      mechanism: :plain,
-      login: System.get_env("KAFFE_PRODUCER_USER"),
-      password: System.get_env("KAFFE_PRODUCER_PASSWORD")
-    }
+config :brod,
+  clients: [
+    kafka_client: [
+      endpoints: [localhost: 9092]
+    ]
   ]
 
 config :vortex_pub_sub, VortexPubSub.Endpoint,
