@@ -8,11 +8,11 @@ defmodule VortexPubSub.PublishMessages do
 
     case key do
 
-      Constants.kafka_game_invite_event_key() ->
+     "game-invite-event" ->
         topic = "user:notifications:" <> data.user_who_we_are_sending_event
         start_async_publishing(topic , data , key)
 
-      Constants.kafka_friend_request_event_key() ->
+      "friend-request-event" ->
 
         topic = "user:notifications:"<>data.user_who_we_are_sending_event
         start_async_publishing(topic , data , key)
