@@ -6,8 +6,7 @@ defmodule VortexPubSub do
 
     # supervisor children
     children = [
-      {Registry, keys: :unique, name: VortexPubSub.Registry},
-      {Registry, keys: :unique, name: VortexPubSub.UserRegistry},
+      {Task.Supervisor, name: VortexPubSub.UserSocketSupervisor},
       #{Registry, keys: :unique, name: VortexPubSub.Pulsar.ChessRegistry},
    #   Pulsar.UserSupervisor,
       Pulsar.GameSupervisorApplication,
@@ -21,7 +20,10 @@ defmodule VortexPubSub do
       %{
         id: VortexPubSub.KafkaConsumer,
         start: {VortexPubSub.KafkaConsumer, :start, []}
-      }
+      },
+
+      {Registry, keys: :unique, name: VortexPubSub.Registry},
+      {Registry, keys: :unique, name: VortexPubSub.UserRegistry}
 
     ]
 
