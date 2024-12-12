@@ -45,7 +45,7 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
   def on_connect(pid, user_id) do
     # Log user_id connected, increase gauge, etc.
-    IO.puts("Starting monitor for user_id: #{user_id}")
+    Logger.info("Starting monitor for user_id: #{user_id}")
     monitor(pid, user_id)
   end
 
@@ -64,7 +64,13 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   end
 
   def on_disconnect(user_id) do
-    IO.puts("SOCKET DISCONNECT EVENT FOR USER_ID: #{user_id}")
+    res = Task.async(fn -> case UserMutation.set_user_online(user_id, false) do
+      {:ok , _} -> Logger.info("[SocketDisconnect] Changing User is_online status successful for user_id=#{user_id}")
+
+      {:error, _} -> Logger.error("[SocketDisconnect] Changing User is_online status unsuccessful for user_id=#{user_id}")
+    end
+     end)
+    Task.await(res)
   end
 
   defp monitor(pid , user_id) do
