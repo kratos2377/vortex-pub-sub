@@ -4,8 +4,10 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
     alias VortexPubSub.Presence
     alias VortexPubSub.Constants
 
-    def join("user:" <> user_id, _params, socket) do
+    def join("user:" <> user_id, params, socket) do
         #Add Logic to parse token and then join the user socket channel. Send JWT Token in Params and parse it using joken
+        IO.puts("User connection param is")
+        IO.inspect(params)
         {:ok , socket}
     end
 
@@ -17,10 +19,10 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
         "user_who_we_are_sending_event" => user_who_we_are_sending_event
     }, socket) do
         broadcast!(socket , "friend-request-event" ,  %{
-            "friend_request_id" => friend_request_id,
-            "user_who_send_request_id" => user_who_send_request_id,
-            "user_who_send_request_username" => user_who_send_request_username,
-            "user_who_we_are_sending_event" => user_who_we_are_sending_event
+            friend_request_id: friend_request_id,
+            user_who_send_request_id: user_who_send_request_id,
+            user_who_send_request_username: user_who_send_request_username,
+            user_who_we_are_sending_event: user_who_we_are_sending_event
         } )
     end
 
@@ -34,12 +36,12 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
         "game_type" => game_type,
     }, socket) do
         broadcast!(socket , "game-invite-event" ,  %{
-            "user_who_send_request_id" => user_who_send_request_id,
-            "user_who_send_request_username" => user_who_send_request_username,
-            "user_who_we_are_sending_event" => user_who_we_are_sending_event,
-            "game_id" => game_id,
-            "game_id" => game_id,
-            "game_type" => game_type,
+            user_who_send_request_id: user_who_send_request_id,
+            user_who_send_request_username: user_who_send_request_username,
+            user_who_we_are_sending_event: user_who_we_are_sending_event,
+            game_id: game_id,
+            game_id: game_id,
+            game_type: game_type,
         } )
     end
 end
