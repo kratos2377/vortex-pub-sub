@@ -18,7 +18,10 @@ defmodule VortexPubSub.PublishMessages do
         start_async_publishing(topic , data , key)
 
 
-      _ -> Logger.error("Invalid Key")
+      _ ->
+        IO.inspect("Invalid Key data recieved")
+        IO.inspect(data)
+        Logger.error("Invalid Key")
     end
 
   end

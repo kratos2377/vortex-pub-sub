@@ -1,14 +1,27 @@
 defmodule VortexPubSub.Cygnus.UserNotificationChannel do
     use VortexPubSubWeb, :channel
+    require Logger
     alias MaelStorm.ChessServer
     alias VortexPubSub.Presence
     alias VortexPubSub.Constants
 
-    def join("user:" <> user_id, params, socket) do
+    def join("user:notifications:" <> user_id, %{"token" => token , "user_id" => user_id}, socket) do
         #Add Logic to parse token and then join the user socket channel. Send JWT Token in Params and parse it using joken
-        IO.puts("User connection param is")
-        IO.inspect(params)
-        {:ok , socket}
+        signer = Joken.Signer.create("HS256" ,  Application.fetch_env!(:vortex_pub_sub, :joken_signer_key))
+
+        case Joken.verify(token , signer , []) do
+
+            {:ok , claims} -> case claims[:user_id] do
+              user_id ->
+                Logger.info("Successfully Connected to user notification channel for userId=#{user_id}")
+                {:ok , socket}
+
+              _ -> Logger.info("Token userId=#{claims[:user_id]} does not match the userId=#{user_id} trying to connect to socket")
+            end
+            _ -> Logger.info("Invalid Token issue for userId=#{user_id}")
+            :error
+        end
+
     end
 
     def handle_in("friend-request-event" ,

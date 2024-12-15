@@ -7,7 +7,7 @@ defmodule VortexPubSub.GameLogicController do
   alias MaelStorm.ChessServer
   alias MealStorm.ScrribleServer
   alias Holmberg.Mutation.Game, as: GameMutation
-  alias VortexPubSub.MatchmakinController
+  alias VortexPubSub.MatchmakingController
   alias VortexPubSub.Constants
   alias JsonResult
   alias VortexPubSub.KafkaProducer
@@ -612,7 +612,7 @@ end
   post "/create_ticket_and_find_match" do
       %{"user_id" => user_id, "score" => score , "game_type" => game_type} = conn.body_params
 
-      case MatchmakinController.start_user_matchmaking(user_id , score , game_type) do
+      case MatchmakingController.start_user_matchmaking(user_id , score , game_type) do
         :ok -> conn |>  put_resp_content_type("application/json")
         |> send_resp(
           200,
@@ -620,7 +620,7 @@ end
         )
         :error -> conn |> send_resp(
           400,
-          Jason.encode!(%{result: %{ success: false},  error_message: "Error While Raising Matchmaking Ticker"})
+          Jason.encode!(%{result: %{ success: false},  error_message: "Error While Raising Matchmaking Ticket"})
         )
       end
   end

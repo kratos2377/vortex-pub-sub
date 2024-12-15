@@ -19,14 +19,21 @@ defmodule VortexPubSub.Cygnus.UserSocket do
        case Joken.verify(token ,signer , []) do
         {:ok , claims} ->
           # user_connection_event_payload = %{user_id: user_id , username: username}
-        case UserMutation.set_user_online(user_id, true) do
-          {:ok , _} -> {:ok , assign(socket, :user_id, user_id)}
+          case claims[:user_id] do
+            user_id ->
+              case UserMutation.set_user_online(user_id, true) do
+              {:ok , _} -> {:ok , assign(socket, :user_id, user_id)}
 
-          {:error, _} ->:error
-        end
+              {:error, _} ->:error
+
+              _ ->
+                Logger.info("Token userId=#{claims[:user_id]} does not match the userId=#{user_id} trying to connect to socket")
+                :error
+            end
+          end
 
         _ ->
-          IO.puts("Invalid Token")
+          IO.puts("Invalid Token for userId=#{user_id}")
           :error
        end
   end
@@ -51,8 +58,6 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
   @impl true
   def init(state) do
-    IO.puts("Init state is")
-    IO.inspect(state)
     res = {:ok, {_, socket}} = super(state)
     on_connect(self(), socket.assigns.user_id)
     res
