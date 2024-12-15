@@ -626,4 +626,21 @@ end
   end
 
 
+  post "/delete_user_matchmaking_ticket" do
+    %{"user_id" => user_id} = conn.body_params
+
+    case MatchmakingController.delte_user_matchmaking_ticket(user_id) do
+      :ok -> conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true},  message: "Deleted Matchmaking Ticket"})
+      )
+      :error -> conn |> send_resp(
+        400,
+        Jason.encode!(%{result: %{ success: false},  error_message: "Error While Deleting Matchmaking Ticket"})
+      )
+    end
+  end
+
+
 end
