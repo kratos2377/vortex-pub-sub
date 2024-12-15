@@ -37,7 +37,7 @@ def make_user_ticket_changeset(user_id , score , game_type) do
       %{
         Type: "game_type",
         Operator: "=",
-        Value: game_type
+        Value: get_game_type_value(game_type)
       },
       %{
         Type: "max_limit",
@@ -51,7 +51,7 @@ def make_user_ticket_changeset(user_id , score , game_type) do
       }
     ],
     PlayerId: user_id,
-    PlayerParamerters: [
+    PlayerParameters: [
         %{
           Type: "score",
           Value: score
@@ -61,6 +61,14 @@ def make_user_ticket_changeset(user_id , score , game_type) do
 
   user_ticket_changeset
 
+end
+
+def get_game_type_value(game_type) do
+  case game_type do
+    "staked" -> 1
+    "normal" -> 0
+    _ ->0
+  end
 end
 
 
