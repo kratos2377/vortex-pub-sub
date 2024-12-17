@@ -10,12 +10,6 @@ defmodule Quasar.ChessStateManager do
 
     updated_players = Enum.concat(chess_state.turn_map ,[new_player])
 
-
-    IO.puts("NEw map is")
-    IO.inspect(updated_players)
-
-
-
     sorted_players = Enum.sort(updated_players , &(&1.count_id <= &2.count_id))
     status_map = Map.update(chess_state.player_ready_status , user_id , "not-ready", fn _existing_value -> "not-ready" end)
      %{chess_state | turn_map: sorted_players, total_players: Enum.sum([chess_state.total_players , 1]), player_count_index: new_count_id, player_ready_status: status_map}
