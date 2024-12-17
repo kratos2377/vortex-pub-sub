@@ -33,6 +33,34 @@ defmodule Holmberg.Mutation.Game do
     end
   end
 
+  def create_new_match_with_users(game_type , player1 , player2) do
+    game_id = Ecto.UUID.generate()
+    #Only Chess is supported as of now
+    game_changeset = create_match_game_changeset(game_id, game_type , "chess")
+    match_user_changeset_first = create_user_match_relation_changeset(game_id, player1["PlayerId"], player1["PlayerUsername"])
+    match_user_changeset_second = create_user_match_relation_changeset(game_id, player2["PlayerId"], player2["PlayerUsername"])
+    user_turn_mapping_changeset = create_user_turn_mapping_changeset(game_id, player1 , player2)
+
+    case Mongo.insert_one(:mongo , "games", game_changeset) do
+      {:ok, _} -> case Mongo.insert_many(:mongo, "users" , [match_user_changeset_first , match_user_changeset_second]) do
+        {:ok , _} -> case Mongo.insert_one(:mongo, "user_turns" , user_turn_mapping_changeset) do
+          {:ok , _} -> {:ok , game_id}
+          :ok -> {:ok , game_id}
+          {:error, error_message} ->   {:error , error_message}
+
+          _ -> {:error, "Error Occured while Persisting User Turn Mapping Model"}
+        end
+        {:error, error_message} ->   {:error , error_message}
+
+        _ -> {:error, "Error Occured while Persisting User Model"}
+      end
+
+      {:error, error_message} ->   {:error , error_message}
+
+      _ -> {:error, "Error Occured while Persisting Game Model"}
+    end
+  end
+
 
 
   def join_lobby(conn , res) do
@@ -116,6 +144,7 @@ defmodule Holmberg.Mutation.Game do
       is_staked:  game_type == "staked",
       state_index: 0,
       description: "LOBBY",
+      is_match: false,
       chess_state: "",
       staked_money_state: "",
       poker_state: "",
@@ -138,6 +167,8 @@ defmodule Holmberg.Mutation.Game do
     user_game_relation_model
   end
 
+
+
   defp create_user_turn_mapping_changeset(host_id, game_id, user_id, username, user_count_id) do
     turn_mapping_model = %{
       game_id: game_id,
@@ -147,6 +178,65 @@ defmodule Holmberg.Mutation.Game do
           count_id: user_count_id,
           user_id: user_id,
           username: username
+        }
+      ]
+    }
+
+    turn_mapping_model
+  end
+
+# Mathed Players Match
+  defp create_match_game_changeset(game_id, game_name, game_type) do
+    game_model = %{
+      id: game_id,
+      user_count: 2,
+      host_id: nil,
+      name: game_name,
+      game_type: game_name,
+      is_staked:  game_type == "staked",
+      state_index: 0,
+      is_match: true,
+      description: "INIT",
+      chess_state: "",
+      staked_money_state: "",
+      poker_state: "",
+      scribble_state: "",
+      created_at: DateTime.now!("Etc/UTC"),
+      updated_at: DateTime.now!("Etc/UTC")
+    }
+    game_model
+  end
+
+
+
+  defp create_user_match_relation_changeset(game_id , user_id, username) do
+    user_game_relation_model = %{
+      user_id: user_id,
+      username: username,
+      game_id: game_id,
+      player_type: "player",
+      player_status: "ready"
+    }
+
+    user_game_relation_model
+  end
+
+
+  defp create_match_turns_mapping_changeset(game_id, player1 , player2) do
+    turn_mapping_model = %{
+      game_id: game_id,
+      host_id: nil,
+      turn_mappings: [
+        %{
+          count_id: 1,
+          user_id: player1["PlayerId"],
+          username: player1["PlayerUsername"]
+        },
+
+        %{
+          count_id: 2,
+          user_id:  player2["PlayerId"],
+          username: player2["PlayerUsername"]
         }
       ]
     }

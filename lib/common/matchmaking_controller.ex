@@ -3,9 +3,9 @@ defmodule VortexPubSub.MatchmakingController do
   use HTTPoison.Base
 
   @matchmaking_base_url "http://localhost:8000/"
-def start_user_matchmaking(user_id , score , game_type) do
+def start_user_matchmaking(user_id , username , score , game_type) do
 
-  new_user_ticket_changeset = make_user_ticket_changeset(user_id , score , game_type)
+  new_user_ticket_changeset = make_user_ticket_changeset(user_id , username, score , game_type)
   {:ok , req_body} = Jason.encode(new_user_ticket_changeset)
 
    case HTTPoison.post( @matchmaking_base_url <> "matchmaking/tickets" , req_body , %{"Content-Type": "application/json"} ) do
@@ -42,7 +42,7 @@ def delte_user_matchmaking_ticket(user_id) do
 
 end
 
-def make_user_ticket_changeset(user_id , score , game_type) do
+def make_user_ticket_changeset(user_id , username, score , game_type) do
 
   max_score = min(score , 2700)
   min_score =max(0 , score- 900)
@@ -66,6 +66,7 @@ def make_user_ticket_changeset(user_id , score , game_type) do
       }
     ],
     PlayerId: user_id,
+    PlayerUsername: username,
     PlayerParameters: [
         %{
           Type: "score",

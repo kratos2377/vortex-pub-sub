@@ -36,16 +36,12 @@ defmodule VortexPubSub.KafkaConsumer do
       {:kafka_message_set , topic , partition , _ , payload} ->
         case Enum.at(payload , 0) do
           {:kafka_message , _ , key , data , _ , _ , _} ->
-            IO.puts("Event recieved from topic: #{topic}")
             case Jason.decode(data) do
 
               {:ok , json_data} ->
                 res = Task.async(fn -> PublishMessages.publish_the_message(key, json_data) end)
                 Task.await(res)
                 _ ->
-                  IO.puts("Event recieved from topic: #{topic}")
-                  IO.inspect("Data is")
-                  IO.inspect(data)
                   Logger.error("Error while parsing json data")
             end
 

@@ -610,9 +610,9 @@ end
   # end
 
   post "/create_ticket_and_find_match" do
-      %{"user_id" => user_id, "score" => score , "game_type" => game_type} = conn.body_params
+      %{"user_id" => user_id, "username" => username,"score" => score , "game_type" => game_type} = conn.body_params
 
-      case MatchmakingController.start_user_matchmaking(user_id , score , game_type) do
+      case MatchmakingController.start_user_matchmaking(user_id , username, score , game_type) do
         :ok -> conn |>  put_resp_content_type("application/json")
         |> send_resp(
           200,

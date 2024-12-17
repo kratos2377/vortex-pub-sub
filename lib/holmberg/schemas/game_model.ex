@@ -16,6 +16,7 @@ defmodule Holmberg.Schemas.GameModel do
     field :game_type, :string
     field :is_staked, :boolean
     field :state_index, :integer
+    field :is_match, :boolean
     field :description, :string
     field :chess_state, :string
     field :staked_money_state, :string   # Assuming StakedUsers is a complex type
