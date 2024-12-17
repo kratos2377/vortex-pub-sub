@@ -61,8 +61,19 @@ defmodule VortexPubSub.PublishMessages do
     case GameMutation.create_new_match_with_users(data["GameType"] , player1 , player2) do
     {:ok, game_id} -> Logger.info("Game Session created for ther users")
 
-    start_async_publishing(topic1 , %{index: 0 , opponent_details: player2 , game_id: game_id} , "match-details")
-    start_async_publishing(topic2 , %{index: 1 , opponent_details: player1 , game_id: game_id} , "match-details")
+    case ChessSupervisor.start_game_of_match_type(game_id , player1 , player2) do
+      {:ok , _} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
+
+      start_async_publishing(topic1 , %{index: 0 , opponent_details: player2 , game_id: game_id} , "match-details")
+      start_async_publishing(topic2 , %{index: 1 , opponent_details: player1 , game_id: game_id} , "match-details")
+
+
+      {:error , message} -> Logger.info("Error while spawning ChessProcess for '#{game_id}'. with some error '#{message}'")
+
+    end
+
+
+
 
 
       {:error, _} -> Logger.info("Some Issue occured while creating game session for the match")

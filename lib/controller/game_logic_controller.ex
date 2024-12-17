@@ -40,15 +40,26 @@ end
           {:ok , game_id} ->
             case ChessSupervisor.start_game(game_id , user_id , username) do
               {:ok , _} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
+
+              conn
+              |> put_resp_content_type("application/json")
+              |> send_resp(
+                200,
+                Jason.encode!(%{result: %{ success: true} , game_id: "#{game_id}"})
+              )
+
+
               {:error , message} -> Logger.info("Error while spawning ChessProcess for '#{game_id}'. with some error '#{message}'")
+
+              conn
+              |> put_resp_content_type("application/json")
+              |> send_resp(
+                400,
+                Jason.encode!(%{result: %{ success: false}, error_message: "Error while spawning game session"})
+              )
             end
 
-          conn
-          |> put_resp_content_type("application/json")
-          |> send_resp(
-            200,
-            Jason.encode!(%{result: %{ success: true} , game_id: "#{game_id}"})
-          )
+
           {:error, message} ->
             conn
             |> put_resp_content_type("application/json")
