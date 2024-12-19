@@ -67,7 +67,7 @@ defmodule MaelStorm.ChessServer do
     def handle_call({:update_player_status, user_id, status}, _from , state) do
       res = ChessStateManager.update_player_status(state , user_id , status)
 
-      {:reply, "success" , res}
+      {:reply, {:ok , res} , res}
     end
 
     def handle_call({:start_game}, _from, state) do

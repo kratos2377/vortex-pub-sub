@@ -134,7 +134,16 @@ defmodule Holmberg.Mutation.Game do
   end
 
 
+  def update_player_status(game_id , game_name , user_id , status) do
+    case Mongo.update_one(:mongo , "users" , %{game_id: game_id , user_id: user_id} , %{ "$set":  %{player_status: "not-ready"} }) do
+      {:ok , _} -> :ok
+      _ -> :error
+    end
+  end
+
+
   defp create_game_changeset(game_id, host_id, game_name, game_type) do
+
     game_model = %{
       id: game_id,
       user_count: 1,
@@ -145,7 +154,7 @@ defmodule Holmberg.Mutation.Game do
       state_index: 0,
       description: "LOBBY",
       is_match: false,
-      chess_state: "",
+      chess_state: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
       staked_money_state: "",
       poker_state: "",
       scribble_state: "",
@@ -215,7 +224,7 @@ defmodule Holmberg.Mutation.Game do
       username: username,
       game_id: game_id,
       player_type: "player",
-      player_status: "ready"
+      player_status: "not-ready"
     }
 
     user_game_relation_model

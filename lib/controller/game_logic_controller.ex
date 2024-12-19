@@ -297,14 +297,45 @@ end
     %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "status" => status} = conn.body_params
 
     case game_name do
-      "chess" -> ChessServer.update_player_status(game_id , user_id , status)
+      "chess" -> case GameMutation.update_player_status(  game_id, game_name  , user_id , status) do
+        :ok->  case ChessServer.update_player_status(game_id , user_id , status) do
 
-      conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(
-        200,
-        Jason.encode!(%{result: %{ success: true}})
-      )
+          {:ok , res} ->
+
+            IO.puts("NEw state is")
+            IO.inspect(res)
+
+            has_not_ready = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-ready" end)
+
+            if !has_not_ready do
+              Endpoint.broadcast_from!("game:chess:"<> game_id , "start-the-match" , %{})
+              Endpoint.broadcast_from!("game:spectate:chess:"<> game_id , "start-the-match" , %{})
+            end
+
+            conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            200,
+            Jason.encode!(%{result: %{ success: true}})
+          )
+
+
+            _ ->  conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              400,
+              Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+            )
+        end
+
+        _ -> conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
+        )
+
+      end
 
       _ -> conn
       |> put_resp_content_type("application/json")
@@ -313,21 +344,6 @@ end
         Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
       )
 
-      "scribble" -> ScribbleServer.update_player_status(game_id , user_id , status)
-
-      conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(
-        200,
-        Jason.encode!(%{result: %{ success: true}})
-      )
-
-      _ -> conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(
-        400,
-        Jason.encode!(%{result: %{ success: false},  error_message: "some error occured"})
-      )
     end
 
   end
