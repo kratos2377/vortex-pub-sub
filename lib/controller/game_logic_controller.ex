@@ -308,8 +308,8 @@ end
             has_not_ready = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-ready" end)
 
             if !has_not_ready do
-              Endpoint.broadcast_from!("game:chess:"<> game_id , "start-the-match" , %{})
-              Endpoint.broadcast_from!("game:spectate:chess:"<> game_id , "start-the-match" , %{})
+              Endpoint.broadcast!("game:chess:"<> game_id , "start-the-match" , %{})
+              Endpoint.broadcast!("game:spectate:chess:"<> game_id , "start-the-match" , %{})
             end
 
             conn
@@ -576,7 +576,7 @@ end
 
     }
 
-    Endpoint.broadcast_from!("user:notifications:"<> user_receiving_id , Constants.kafka_game_invite_event_key() , user_invite_event)
+    Endpoint.broadcast!("user:notifications:"<> user_receiving_id , Constants.kafka_game_invite_event_key() , user_invite_event)
     conn |>  put_resp_content_type("application/json")
       |> send_resp(
         200,

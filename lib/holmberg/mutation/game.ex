@@ -39,7 +39,7 @@ defmodule Holmberg.Mutation.Game do
     game_changeset = create_match_game_changeset(game_id, game_type , "chess")
     match_user_changeset_first = create_user_match_relation_changeset(game_id, player1["PlayerId"], player1["PlayerUsername"])
     match_user_changeset_second = create_user_match_relation_changeset(game_id, player2["PlayerId"], player2["PlayerUsername"])
-    user_turn_mapping_changeset = create_user_turn_mapping_changeset(game_id, player1 , player2)
+    user_turn_mapping_changeset = create_match_turns_mapping_changeset(game_id, player1 , player2)
 
     case Mongo.insert_one(:mongo , "games", game_changeset) do
       {:ok, _} -> case Mongo.insert_many(:mongo, "users" , [match_user_changeset_first , match_user_changeset_second]) do

@@ -12,21 +12,21 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   channel "game:spectate:chess:*", VortexPubSub.Cygnus.ChessSpectateChannel
 
   @impl true
-  def connect(%{"token" => token , "user_id" => user_id , "username" => _username}, socket) do
+  def connect(%{"token" => token , "user_id" => user_id , "username" => username}, socket , _connect_info) do
 
 
       signer = Joken.Signer.create("HS256" ,  Application.fetch_env!(:vortex_pub_sub, :joken_signer_key))
        case Joken.verify(token ,signer , []) do
         {:ok , claims} ->
           # user_connection_event_payload = %{user_id: user_id , username: username}
-          case claims[:user_id] do
+          case claims["user_id"] do
             user_id ->
               case UserMutation.set_user_online(user_id, true) do
               {:ok , _} -> {:ok , assign(socket, :user_id, user_id)}
 
               {:error, _} ->:error
 
-              _ ->
+              nil ->
                 Logger.info("Token userId=#{claims[:user_id]} does not match the userId=#{user_id} trying to connect to socket")
                 :error
             end
