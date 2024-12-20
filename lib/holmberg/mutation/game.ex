@@ -135,7 +135,7 @@ defmodule Holmberg.Mutation.Game do
 
 
   def update_player_status(game_id , game_name , user_id , status) do
-    case Mongo.update_one(:mongo , "users" , %{game_id: game_id , user_id: user_id} , %{ "$set":  %{player_status: "not-ready"} }) do
+    case Mongo.update_one(:mongo , "users" , %{game_id: game_id , user_id: user_id} , %{ "$set":  %{player_status: status} }) do
       {:ok , _} -> :ok
       _ -> :error
     end

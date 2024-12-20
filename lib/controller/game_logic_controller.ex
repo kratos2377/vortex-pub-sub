@@ -116,7 +116,7 @@ end
               200,
               Jason.encode!(%{result: %{ success: true}})
             )
-              _ ->
+            _ ->
                 _res_leave = ChessServer.leave_lobby(game_id, user_id)
                 conn
         |> put_resp_content_type("application/json")

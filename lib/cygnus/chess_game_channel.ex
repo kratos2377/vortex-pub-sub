@@ -73,7 +73,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
 
       Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "game-event" ,   %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type} )
-      KafkaProducer.send_message(Constants.kafka_user_game_events_topic(),  %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type}, Constants.kafka_user_game_move_event_key())
+      KafkaProducer.send_message(Constants.kafka_user_game_events_topic(),  user_game_move_event, Constants.kafka_user_game_move_event_key())
     {:noreply,socket}
   end
 
@@ -86,6 +86,13 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
   def handle_in("start-game-event", %{"admin_id" => admin_id, "game_id" => game_id, "game_name" => game_name} , socket) do
     broadcast!(socket, "start-game-for-all", %{admin_id: admin_id , game_id: game_id, game_name: game_name} )
+   # KafkaProducer.send_message(Constants.kafka_user_topic(),  %{admin_id: admin_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
+    {:noreply,socket}
+  end
+
+
+  def handle_in("error-event", %{"admin_id" => admin_id, "game_id" => game_id, "game_name" => game_name} , socket) do
+    #broadcast!(socket, "start-game-for-all", %{admin_id: admin_id , game_id: game_id, game_name: game_name} )
    # KafkaProducer.send_message(Constants.kafka_user_topic(),  %{admin_id: admin_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
     {:noreply,socket}
   end
