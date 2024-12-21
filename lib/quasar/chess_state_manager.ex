@@ -43,4 +43,9 @@ defmodule Quasar.ChessStateManager do
   end
   end
 
+  def reset_game_status(%ChessState{} = chess_state) do
+    new_status_map = Map.new(chess_state.player_ready_status , fn {key, _value} -> {key, "not-ready"} end)
+    %{chess_state | player_ready_status: new_status_map , time_left_for_white_player: 900, time_left_for_black_player: 900}
+  end
+
 end

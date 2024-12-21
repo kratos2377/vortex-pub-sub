@@ -669,5 +669,32 @@ end
     end
   end
 
+  post "/replay_game" do
+    %{"user_id" => user_id , "game_id" => game_id , "status" => status}
+
+    case ChessServer.update_player_status(game_id , user_id , status) do
+      {:ok , res} ->
+
+        has_not_ready = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-ready" end)
+
+        if !has_not_ready do
+
+          Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
+          Endpoint.broadcast!("game:spectate:chess:"<> game_id , "start-the-replay-match" , %{})
+        end
+
+        conn |>  put_resp_content_type("application/json")
+      |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true},  message: "Deleted Matchmaking Ticket"})
+      )
+
+      _ -> send_resp(
+        400,
+        Jason.encode!(%{result: %{ success: false},  error_message: "Error while setting status"})
+      )
+    end
+  end
+
 
 end

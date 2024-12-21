@@ -87,9 +87,34 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   def handle_in("start-game-event", %{"admin_id" => admin_id, "game_id" => game_id, "game_name" => game_name} , socket) do
     broadcast!(socket, "start-game-for-all", %{admin_id: admin_id , game_id: game_id, game_name: game_name} )
    # KafkaProducer.send_message(Constants.kafka_user_topic(),  %{admin_id: admin_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
+
+      Endpoint.broadcast_from!(self() , "game:spectate:chess:" <> game_id, "start-game-for-all", %{admin_id: admin_id , game_id: game_id, game_name: game_name} )
     {:noreply,socket}
   end
 
+
+  def handle_in("checkmate-move", %{"color_in_check_mate" => color_in_check_mate , "player_color" => player_color , "winner_username" => winner_username, "winner_user_id" => winner_user_id}) do
+    broadcast!(socket, "checkmate", %{color_in_check_mate: color_in_check_mate , player_color: player_color , winner_username:  winner_username, winner_user_id: winner_user_id} )
+   # KafkaProducer.send_message(Constants.kafka_user_topic(),  %{admin_id: admin_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
+
+
+   {:noreply,socket}
+  end
+
+
+
+  def handle_in("checkmate-accepted", %{"color_in_check_mate" => color_in_check_mate , "player_color" => player_color , "winner_username" => winner_username, "winner_user_id" => winner_user_id,
+  "loser_username" => loser_username , "loser_user_id" => loser_user_id , "game_id" => game_id}) do
+    broadcast!(socket, "game-over", %{color_in_check_mate: color_in_check_mate , player_color: player_color , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id} )
+
+
+    Endpoint.broadcast_from!(self() , "game:spectate:chess:" <> game_id , "game-over",   %{color_in_check_mate: color_in_check_mate , player_color: player_color , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id , game_id: game_id} )
+
+    # Reset Game Status for replay
+    ChessServer.reset_game_state(game_id)
+
+   {:noreply,socket}
+  end
 
   def handle_in("error-event", %{"admin_id" => admin_id, "game_id" => game_id, "game_name" => game_name} , socket) do
     #broadcast!(socket, "start-game-for-all", %{admin_id: admin_id , game_id: game_id, game_name: game_name} )

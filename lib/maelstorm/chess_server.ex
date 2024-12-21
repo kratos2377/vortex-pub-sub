@@ -39,6 +39,15 @@ defmodule MaelStorm.ChessServer do
       GenServer.call(via_tuple(game_id), {:start_game} )
     end
 
+    def reset_game_state(game_id) do
+      GenServer.call(via_tuple(game_id), {:reset_game_state})
+    end
+
+
+    def replay_game(game_id) do
+
+    end
+
 
 
 
@@ -76,4 +85,15 @@ defmodule MaelStorm.ChessServer do
       {:reply , res , state}
     end
 
+
+    def handle_call({:reset_game_state}, _from, state) do
+
+      res = ChessStateManger.reset_game_status(state)
+
+      IO.puts("New state after reset is")
+      IO.inspect(res)
+
+      {:reply , :ok , res }
+
+    end
 end
