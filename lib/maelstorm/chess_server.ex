@@ -88,7 +88,7 @@ defmodule MaelStorm.ChessServer do
 
     def handle_call({:reset_game_state}, _from, state) do
 
-      res = ChessStateManger.reset_game_status(state)
+      res = ChessStateManager.reset_game_status(state)
 
       IO.puts("New state after reset is")
       IO.inspect(res)

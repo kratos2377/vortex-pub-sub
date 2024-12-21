@@ -47,7 +47,7 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
     broadcast!(socket , Constats.kafka_user_game_move_event_key() , %{user_id: user_id , game_id: game_id} )
   end
 
-  def handle_in("start-game-for-all" , %{admin_id: admin_id , game_id: game_id, game_name: game_name}) do
+  def handle_in("start-game-for-all" , %{admin_id: admin_id , game_id: game_id, game_name: game_name} , socket) do
     broadcast!(socket , "start-game-for-all" , %{admin_id: admin_id , game_id: game_id, game_name: game_name} )
   end
 
