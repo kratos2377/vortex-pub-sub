@@ -132,7 +132,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     broadcast!(socket, "start-the-replay-match", %{} )
   end
 
-  def handle_in("replay-req-accepted" , %{"user_id" => user_id , "game_id" => game_id}) do
+  def handle_in("replay-req-accepted" , %{"user_id" => user_id , "game_id" => game_id} , socket) do
     broadcast!(socket, "replay-accepted-by-user", %{user_id: user_id} )
     Endpoint.broadcast_from!(self() , "game:spectate:chess:" <> game_id , "replay-accepted-by-user",   %{user_id: user_id} )
   end
