@@ -55,4 +55,18 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
     broadcast!(socket , "game-over" ,  %{color_in_check_mate: color_in_check_mate , player_color: player_color , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id , game_id: game_id})
   end
 
+  def handle_in("start-the-replay-match", %{}, socket) do
+    broadcast!(socket, "start-the-replay-match", %{} )
+  end
+
+  def handle_in("replay-false-event", %{}, socket) do
+    broadcast!(socket, "replay-false-event", %{} )
+  end
+
+  def handle_in("replay-accepted-by-user", %{user_id: user_id}, socket) do
+    broadcast!(socket, "replay-accepted-by-user", %{user_id: user_id} )
+  end
+
+
+
 end
