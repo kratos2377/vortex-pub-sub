@@ -137,6 +137,11 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   end
 
 
+  def handle_in("start-the-match", %{}, socket) do
+    broadcast!(socket, "start-the-match", %{} )
+  end
+
+
   #Add stalemate events
 
   defp current_player(socket) do

@@ -64,11 +64,14 @@ defmodule VortexPubSub.PublishMessages do
     case ChessSupervisor.start_game_of_match_type(game_id , player1 , player2) do
       {:ok , _} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
 
-      start_async_publishing(topic1 , %{index: 0 , opponent_details: player2 , game_id: game_id} , "match-details")
-      start_async_publishing(topic2 , %{index: 1 , opponent_details: player1 , game_id: game_id} , "match-details")
+      start_async_publishing(topic1 , %{index: 0 , opponent_details: player2 , game_id: game_id} , "match-found-details")
+      start_async_publishing(topic2 , %{index: 1 , opponent_details: player1 , game_id: game_id} , "match-found-details")
 
 
       {:error , message} -> Logger.info("Error while spawning ChessProcess for '#{game_id}'. with some error '#{message}'")
+
+      start_async_publishing(topic1 , %{} , "match-game-error")
+      start_async_publishing(topic2 , %{} , "match-game-error")
 
     end
 
@@ -77,6 +80,9 @@ defmodule VortexPubSub.PublishMessages do
 
 
       {:error, _} -> Logger.info("Some Issue occured while creating game session for the match")
+
+      start_async_publishing(topic1 , %{} , "match-game-error")
+      start_async_publishing(topic2 , %{} , "match-game-error")
     end
 
   end

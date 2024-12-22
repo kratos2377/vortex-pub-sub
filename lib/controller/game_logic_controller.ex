@@ -310,7 +310,7 @@ end
   end
 
   post "/update_player_status" do
-    %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "status" => status} = conn.body_params
+    %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "status" => status , "is_match" => is_match} = conn.body_params
 
     case game_name do
       "chess" -> case GameMutation.update_player_status(  game_id, game_name  , user_id , status) do
@@ -323,7 +323,7 @@ end
 
             has_not_ready = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-ready" end)
 
-            if !has_not_ready do
+            if !has_not_ready && is_match do
               Endpoint.broadcast!("game:chess:"<> game_id , "start-the-match" , %{})
               Endpoint.broadcast!("game:spectate:chess:"<> game_id , "start-the-match" , %{})
             end

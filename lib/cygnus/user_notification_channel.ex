@@ -57,4 +57,18 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
             game_type: game_type,
         } )
     end
+
+
+    def handle_in("match-found" , %{"index" => index} , socket) do
+        broadcast!(socket , "match-found" , %{index: index})
+    end
+
+
+    def handle_in("match-found-detail" , %{index: index , opponent_details: player , game_id: game_id} , socket) do
+        broadcast!(socket ,"match-found-detail" , %{index: index , opponent_details: player , game_id: game_id})
+    end
+
+    def handle_in("match-game-error" , %{} , socket) do
+        broadcast!(socket , "match-game-error" , %{})
+    end
 end

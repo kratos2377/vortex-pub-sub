@@ -67,6 +67,10 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
     broadcast!(socket, "replay-accepted-by-user", %{user_id: user_id} )
   end
 
+  def handle_in("start-the-match", %{}, socket) do
+    broadcast!(socket, "start-the-match", %{} )
+  end
+
 
 
 end
