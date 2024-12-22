@@ -137,7 +137,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
 
   def handle_in("start-the-match", %{}, socket) do
-    broadcast!(socket, "start-the-match", %{} )
+    broadcast!(socket, "start-the-match-for-users", %{} )
     {:noreply,socket}
   end
 
