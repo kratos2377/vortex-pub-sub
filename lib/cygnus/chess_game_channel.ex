@@ -23,18 +23,14 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
   def handle_in("joined-room", %{"user_id" => user_id, "username" => username , "game_id" => game_id}, socket) do
     #Add logic to prevent user from joining if the game is in progress
-
+    IO.puts("Recieved joined-room event from controller")
     broadcast!(socket, "new-user-joined", %{user_id: user_id, username: username, game_id: game_id})
-
-    #Send Current turn mappings of game to joined user
-
-    # KafkaProducer.send_message(Constants.kafka_user_topic(), %{user_id: user_id, username: username, game_id: game_id} ,
-    #   Constants.kafka_user_joined_event_key())
 
     Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "new-user-joined" ,  %{user_id: user_id, username: username, game_id: game_id})
 
     {:noreply, socket}
   end
+
 
 
   def handle_in("leaved-room", %{"user_id" => user_id, "username" => username, "game_id" => game_id, "player_type" => player_type}, socket) do
@@ -125,20 +121,24 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   def handle_in("replay-false", %{"game_id" => game_id}, socket) do
     broadcast!(socket, "replay-false-event", %{} )
     Endpoint.broadcast_from!(self() , "game:spectate:chess:" <> game_id , "replay-false-event",   %{} )
+    {:noreply,socket}
   end
 
   def handle_in("start-the-replay-match", %{}, socket) do
     broadcast!(socket, "start-the-replay-match", %{} )
+    {:noreply,socket}
   end
 
   def handle_in("replay-req-accepted" , %{"user_id" => user_id , "game_id" => game_id} , socket) do
     broadcast!(socket, "replay-accepted-by-user", %{user_id: user_id} )
     Endpoint.broadcast_from!(self() , "game:spectate:chess:" <> game_id , "replay-accepted-by-user",   %{user_id: user_id} )
+    {:noreply,socket}
   end
 
 
   def handle_in("start-the-match", %{}, socket) do
     broadcast!(socket, "start-the-match", %{} )
+    {:noreply,socket}
   end
 
 

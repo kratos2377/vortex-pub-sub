@@ -37,6 +37,8 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
             user_who_send_request_username: user_who_send_request_username,
             user_who_we_are_sending_event: user_who_we_are_sending_event
         } )
+
+        {:noreply,socket}
     end
 
     def handle_in("game-invite-event" ,
@@ -56,19 +58,23 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
             game_id: game_id,
             game_type: game_type,
         } )
+        {:noreply,socket}
     end
 
 
     def handle_in("match-found" , %{"index" => index} , socket) do
         broadcast!(socket , "match-found" , %{index: index})
+        {:noreply,socket}
     end
 
 
     def handle_in("match-found-detail" , %{index: index , opponent_details: player , game_id: game_id} , socket) do
         broadcast!(socket ,"match-found-detail" , %{index: index , opponent_details: player , game_id: game_id})
+        {:noreply,socket}
     end
 
     def handle_in("match-game-error" , %{} , socket) do
         broadcast!(socket , "match-game-error" , %{})
+        {:noreply,socket}
     end
 end

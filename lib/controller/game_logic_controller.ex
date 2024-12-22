@@ -116,10 +116,17 @@ end
           )
 
 
+
             res -> case GameMutation.join_lobby(conn , res) do
+
               {:ok, _} ->
 
-                Endpoint.broadcast!("game:chess:"<> game_id , "joined-room" , %{user_id: user_id , username: username , game_id: game_id})
+                # IO.puts("Successfully joined lobby")
+                # IO.inspect(res)
+                # new_res = Endpoint.broadcast!("game:chess:"<> game_id , "joined-room" , %{user_id: user_id , username: username , game_id: game_id})
+
+                # IO.puts("new res is")
+                # IO.inspect(new_res)
 
                 conn
               |> put_resp_content_type("application/json")
@@ -150,34 +157,6 @@ end
         )
       end
 
-      "scribble" -> case ScribbleServer.game_pid(game_id) do
-        pid when is_pid(pid) ->
-          res = ScribbleServer.join_lobby(game_id, user_id, username)
-
-          case GameMutation.join_lobby(conn , res) do
-            {:ok, _} -> conn
-            |> put_resp_content_type("application/json")
-            |> send_resp(
-              200,
-              Jason.encode!(%{result: %{ success: true}})
-            )
-              _ ->
-                _res_leave = ScribbleServer.leave_lobby(game_id, user_id)
-                conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(
-          400,
-          Jason.encode!(JsonResult.create_error_struct(Constants.error_while_joining_lobby()))
-        )
-          end
-        nil ->
-          conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(
-          400,
-          Jason.encode!(%{result: %{ success: false},  error_message: Constants.game_not_found()})
-        )
-      end
 
         _ -> conn
         |> put_resp_content_type("application/json")
