@@ -1,7 +1,6 @@
 defmodule VortexPubSub.Cygnus.UserSocket do
   use Phoenix.Socket
   require Logger
-  alias VortexPubSub.KafkaProducer
   alias Holmberg.Mutation.User, as: UserMutation
   use Joken.Config
 

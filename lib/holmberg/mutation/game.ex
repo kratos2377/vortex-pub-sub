@@ -142,14 +142,14 @@ defmodule Holmberg.Mutation.Game do
   end
 
 
-  defp create_game_changeset(game_id, host_id, game_name, game_type) do
+  defp create_game_changeset(game_id, host_id, game_type, game_name) do
 
     game_model = %{
       id: game_id,
       user_count: 1,
       host_id: host_id,
       name: game_name,
-      game_type: game_name,
+      game_type: game_type,
       is_staked:  game_type == "staked",
       state_index: 0,
       description: "LOBBY",

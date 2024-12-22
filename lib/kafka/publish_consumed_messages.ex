@@ -11,15 +11,6 @@ defmodule VortexPubSub.PublishMessages do
 
     case key do
 
-     "game-invite-event" ->
-        topic = "user:notifications:" <> data.user_who_we_are_sending_event
-        start_async_publishing(topic , data , key)
-
-      "friend-request-event" ->
-
-        topic = "user:notifications:"<>data.user_who_we_are_sending_event
-        start_async_publishing(topic , data , key)
-
       "match-found" -> make_game_room_and_publish_data(key , data)
       _ ->
         Logger.error("Invalid Key")
@@ -29,7 +20,7 @@ defmodule VortexPubSub.PublishMessages do
 
 
   def start_async_publishing(topic , data , key) do
-    Endpoint.brodcast(topic , key , data)
+    Endpoint.brodcast!(topic , key , data)
   end
 
 

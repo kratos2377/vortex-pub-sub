@@ -41,7 +41,7 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
         {:noreply,socket}
     end
 
-    def handle_in("game-invite-event" ,
+    def handle_out("game-invite-event" ,
     %{
         "user_who_send_request_id" => user_who_send_request_id,
         "user_who_send_request_username" => user_who_send_request_username,
@@ -54,7 +54,6 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
             user_who_send_request_id: user_who_send_request_id,
             user_who_send_request_username: user_who_send_request_username,
             user_who_we_are_sending_event: user_who_we_are_sending_event,
-            game_id: game_id,
             game_id: game_id,
             game_type: game_type,
         } )

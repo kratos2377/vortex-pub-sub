@@ -1,5 +1,6 @@
 defmodule VortexPubSub.Cygnus.ChessGameChannel do
   use VortexPubSubWeb, :channel
+  alias Phoenix.Socket.Broadcast
   alias MaelStorm.ChessServer
   alias VortexPubSub.Presence
   alias VortexPubSub.Endpoint
@@ -19,14 +20,12 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     end
   end
 
-
-
-  def handle_in("joined-room", %{"user_id" => user_id, "username" => username , "game_id" => game_id}, socket) do
+  intercept ["joined-room" , "start-the-replay-match"]
+  def handle_out("joined-room", payload, socket) do
     #Add logic to prevent user from joining if the game is in progress
-    IO.puts("Recieved joined-room event from controller")
-    broadcast!(socket, "new-user-joined", %{user_id: user_id, username: username, game_id: game_id})
+    broadcast!(socket, "new-user-joined", %{user_id: payload.user_id, username: payload.username, game_id: payload.game_id})
 
-    Endpoint.broadcast_from!(self() , "spectate:chess:"<>game_id , "new-user-joined" ,  %{user_id: user_id, username: username, game_id: game_id})
+    Endpoint.broadcast_from!(self() , "spectate:chess:"<>payload.game_id , "new-user-joined" ,  %{user_id: payload.user_id, username: payload.username, game_id: payload.game_id})
 
     {:noreply, socket}
   end
@@ -124,8 +123,9 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     {:noreply,socket}
   end
 
-  def handle_in("start-the-replay-match", %{}, socket) do
-    broadcast!(socket, "start-the-replay-match", %{} )
+  def handle_out("start-the-replay-match", payload, socket) do
+    IO.puts("Broadcasting replay match event for users")
+    broadcast!(socket, "start-the-replay-match-for-users", payload )
     {:noreply,socket}
   end
 

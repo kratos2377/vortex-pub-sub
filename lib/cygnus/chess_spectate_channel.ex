@@ -21,68 +21,71 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
     end
   end
 
+  intercept ["new-user-joined" ,"start-game-for-all" ,  "remove-all-users" , "user-left-room" , "user-status-update" , "game-event" , "verifying-game" , "game-over", "start-the-replay-match" , "replay-false-event" , "replay-accepted-by-user" , "start-the-match"]
 
-  @impl true
-  def handle_in("new-user-joined" , %{user_id: user_id, username: username, game_id: game_id} , socket) do
-    broadcast!(socket , Constats.kafka_user_joined_event_key() , %{user_id: user_id, username: username, game_id: game_id})
+  def handle_out("new-user-joined" , payload , socket) do
+    broadcast!(socket , Constants.kafka_user_joined_event_key() , payload)
     {:noreply,socket}
   end
 
-  def handle_in("remove-all-users" , %{user_id: user_id, username: username, game_id: game_id, player_type: player_type}  , socket) do
-    broadcast!(socket , Constats.remove_all_users_key() , %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
+  def handle_out("remove-all-users" , payload  , socket) do
+    broadcast!(socket , "remove-all-users-for-spectators"  , payload )
     {:noreply,socket}
   end
 
-  def handle_in("user-left-room" , %{user_id: user_id, username: username, game_id: game_id, player_type: player_type}  , socket) do
-    broadcast!(socket , Constats.kafka_user_left_room_event_key() , %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
-    {:noreply,socket}
-  end
-
-
-  def handle_in("user-status-update" ,  %{user_id: user_id, username: username, game_id: game_id, status: status}  , socket) do
-    broadcast!(socket , Constats.kafka_user_status_event_key() ,  %{user_id: user_id, username: username, game_id: game_id, status: status} )
+  def handle_out("user-left-room" , payload  , socket) do
+    broadcast!(socket , "some-user-left" , payload )
     {:noreply,socket}
   end
 
 
-  def handle_in("game-event" ,  %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type}  , socket) do
-    broadcast!(socket , Constats.kafka_user_game_move_event_key() ,  %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type} )
+  def handle_out("user-status-update" ,  payload , socket) do
+    broadcast!(socket , Constants.kafka_user_status_event_key() ,  payload)
     {:noreply,socket}
   end
 
 
-  def handle_in("verifying-game" , %{user_id: user_id , game_id: game_id}  , socket) do
-    broadcast!(socket , Constats.kafka_user_game_move_event_key() , %{user_id: user_id , game_id: game_id} )
+  def handle_out("game-event" ,  payload  , socket) do
+    IO.puts("New user game move event recieved")
+    broadcast!(socket , Constants.kafka_user_game_move_event_key() ,  payload )
     {:noreply,socket}
   end
 
-  def handle_in("start-game-for-all" , %{admin_id: admin_id , game_id: game_id, game_name: game_name} , socket) do
-    broadcast!(socket , "start-game-for-all" , %{admin_id: admin_id , game_id: game_id, game_name: game_name} )
+
+  def handle_out("verifying-game" , payload  , socket) do
+    broadcast!(socket ,  "verifying-game-for-spectators" , payload )
     {:noreply,socket}
   end
 
-  def handle_in("game-over" ,  %{color_in_check_mate: color_in_check_mate , player_color: player_color , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id , game_id: game_id} , socket) do
-    broadcast!(socket , "game-over" ,  %{color_in_check_mate: color_in_check_mate , player_color: player_color , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id , game_id: game_id})
+  def handle_out("start-game-for-all" , payload , socket) do
+    IO.puts("New start game for all event recieved")
+    broadcast!(socket , "start-game-for-spectators" , payload )
     {:noreply,socket}
   end
 
-  def handle_in("start-the-replay-match", %{}, socket) do
-    broadcast!(socket, "start-the-replay-match", %{} )
+  def handle_out("game-over" ,  payload , socket) do
+    IO.puts("Broadcasting new game over event")
+    broadcast!(socket , "game-over-for-spectators" ,  payload)
     {:noreply,socket}
   end
 
-  def handle_in("replay-false-event", %{}, socket) do
-    broadcast!(socket, "replay-false-event", %{} )
+  def handle_out("start-the-replay-match", payload, socket) do
+    broadcast!(socket, "start-the-replay-match-for-spectators", payload )
     {:noreply,socket}
   end
 
-  def handle_in("replay-accepted-by-user", %{user_id: user_id}, socket) do
-    broadcast!(socket, "replay-accepted-by-user", %{user_id: user_id} )
+  def handle_out("replay-false-event", payload, socket) do
+    broadcast!(socket, "replay-false-event-for-spectators", payload )
     {:noreply,socket}
   end
 
-  def handle_in("start-the-match", %{}, socket) do
-    broadcast!(socket, "start-the-match", %{} )
+  def handle_out("replay-accepted-by-user", payload, socket) do
+    broadcast!(socket, "replay-accepted-by-user-for-spectators", payload )
+    {:noreply,socket}
+  end
+
+  def handle_out("start-the-match", payload, socket) do
+    broadcast!(socket, "start-the-match-for-spectators", payload )
     {:noreply,socket}
   end
 

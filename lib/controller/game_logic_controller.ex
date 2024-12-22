@@ -2,16 +2,16 @@ defmodule VortexPubSub.GameLogicController do
   import Plug.Conn
   use Plug.Router
   require Logger
+  use VortexPubSubWeb, :channel
+  alias VortexPubSub.Endpoint
   alias Pulsar.ChessSupervisor
   alias Pulsar.ScribbleSupervisor
   alias MaelStorm.ChessServer
-  alias MealStorm.ScrribleServer
   alias Holmberg.Mutation.Game, as: GameMutation
   alias VortexPubSub.MatchmakingController
   alias VortexPubSub.Constants
   alias JsonResult
   alias VortexPubSub.KafkaProducer
-  alias VortexPubSub.Endpoint
   plug(VortexPubSub.Hypernova.Cors)
 
   plug(Plug.Parsers,
@@ -121,12 +121,7 @@ end
 
               {:ok, _} ->
 
-                # IO.puts("Successfully joined lobby")
-                # IO.inspect(res)
-                # new_res = Endpoint.broadcast!("game:chess:"<> game_id , "joined-room" , %{user_id: user_id , username: username , game_id: game_id})
-
-                # IO.puts("new res is")
-                # IO.inspect(new_res)
+              Endpoint.broadcast!("game:chess:"<> game_id , "joined-room" , %{user_id: user_id , username: username , game_id: game_id})
 
                 conn
               |> put_resp_content_type("application/json")
@@ -559,6 +554,8 @@ end
 
     }
 
+    IO.puts("Publishing game invite from here")
+
     Endpoint.broadcast!("user:notifications:"<> user_receiving_id , Constants.kafka_game_invite_event_key() , user_invite_event)
     conn |>  put_resp_content_type("application/json")
       |> send_resp(
@@ -664,7 +661,6 @@ end
         has_not_ready = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-ready" end)
 
         if !has_not_ready do
-          IO.puts("Starting new game")
           Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
           Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
         end
