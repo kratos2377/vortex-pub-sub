@@ -21,9 +21,8 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
 
 
-  def handle_in("joined-room", %{"user_id" => user_id, "username" => username}, socket) do
+  def handle_in("joined-room", %{"user_id" => user_id, "username" => username , "game_id" => game_id}, socket) do
     #Add logic to prevent user from joining if the game is in progress
-      "game:chess:" <> game_id = socket.topic
 
     broadcast!(socket, "new-user-joined", %{user_id: user_id, username: username, game_id: game_id})
 

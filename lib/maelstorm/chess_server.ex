@@ -59,9 +59,13 @@ defmodule MaelStorm.ChessServer do
     end
 
     def handle_call({:join_lobby, user_id , username}, _from, state) do
-      res = ChessStateManager.add_new_player(state , user_id , username)
+      case ChessStateManager.add_new_player(state , user_id , username) do
+        :error -> {:reply , :lobby_full , state}
 
-      {:reply , res.player_count_index , res}
+        res -> {:reply , res.player_count_index , res}
+      end
+
+
     end
 
     def handle_call({:leave_lobby, user_id }, _from, state) do

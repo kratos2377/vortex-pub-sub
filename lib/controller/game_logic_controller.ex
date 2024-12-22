@@ -107,24 +107,40 @@ end
     case game_name do
       "chess" -> case ChessServer.game_pid(game_id) do
         pid when is_pid(pid) ->
-          res = ChessServer.join_lobby(game_id, user_id, username)
+         case ChessServer.join_lobby(game_id, user_id, username) do
+          :lobby_full -> conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: "Lobby is full"})
+          )
 
-          case GameMutation.join_lobby(conn , res) do
-            {:ok, _} -> conn
-            |> put_resp_content_type("application/json")
-            |> send_resp(
-              200,
-              Jason.encode!(%{result: %{ success: true}})
-            )
-            _ ->
-                _res_leave = ChessServer.leave_lobby(game_id, user_id)
+
+            res -> case GameMutation.join_lobby(conn , res) do
+              {:ok, _} ->
+
+                Endpoint.broadcast!("game:chess:"<> game_id , "joined-room" , %{user_id: user_id , username: username , game_id: game_id})
+
                 conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(
-          400,
-          Jason.encode!(JsonResult.create_error_struct(Constants.error_while_joining_lobby()))
-        )
-          end
+              |> put_resp_content_type("application/json")
+              |> send_resp(
+                200,
+                Jason.encode!(%{result: %{ success: true}})
+              )
+              _ ->
+                  _res_leave = ChessServer.leave_lobby(game_id, user_id)
+                  conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            400,
+            Jason.encode!(JsonResult.create_error_struct(Constants.error_while_joining_lobby()))
+          )
+            end
+
+
+         end
+
+
         nil ->
           conn
         |> put_resp_content_type("application/json")

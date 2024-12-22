@@ -5,6 +5,11 @@ defmodule Quasar.ChessStateManager do
   import Holmberg.Schemas.TurnModel
 
   def add_new_player(%ChessState{} = chess_state ,user_id, username) do
+
+    if chess_state.total_players == 2 do
+      :error
+    end
+
     new_count_id = Enum.sum([chess_state.player_count_index , 1])
     new_player = %Holmberg.Schemas.TurnModel{count_id: new_count_id, user_id: user_id, username: username}
 
