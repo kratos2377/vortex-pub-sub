@@ -26,7 +26,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     IO.puts("Recieved joined-room event from controller")
     broadcast!(socket, "new-user-joined", %{user_id: user_id, username: username, game_id: game_id})
 
-    Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "new-user-joined" ,  %{user_id: user_id, username: username, game_id: game_id})
+    Endpoint.broadcast_from!(self() , "spectate:chess:"<>game_id , "new-user-joined" ,  %{user_id: user_id, username: username, game_id: game_id})
 
     {:noreply, socket}
   end
@@ -37,10 +37,10 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     if player_type == "host" do
 
     broadcast!(socket, "remove-all-users", %{user_id: user_id, username: username, game_id: game_id, player_type: player_type})
-    Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "remove-all-users" ,  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
+    Endpoint.broadcast_from!(self() , "spectate:chess:"<>game_id , "remove-all-users" ,  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
     else
       broadcast!(socket, "user-left-room", %{user_id: user_id, username: username, game_id: game_id, player_type: player_type})
-      Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "user-left-room" ,  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
+      Endpoint.broadcast_from!(self() , "spectate:chess:"<>game_id , "user-left-room" ,  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type} )
     end
 
     #KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, username: username, game_id: game_id, player_type: player_type}, Constants.kafka_user_left_room_event_key())
@@ -52,7 +52,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     broadcast!(socket, "user-status-update", %{user_id: user_id, username: username, game_id: game_id, status: status}  )
     #KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, username: username, game_id: game_id, status: status}, Constants.kafka_user_status_event_key())
 
-    Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "user-status-update" ,   %{user_id: user_id, username: username, game_id: game_id, status: status} )
+    Endpoint.broadcast_from!(self() , "spectate:chess:"<>game_id , "user-status-update" ,   %{user_id: user_id, username: username, game_id: game_id, status: status} )
     {:noreply,socket}
   end
 
@@ -67,7 +67,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
       }
 
 
-      Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "game-event" ,   %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type} )
+      Endpoint.broadcast_from!(self() , "spectate:chess:"<>game_id , "game-event" ,   %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type} )
       KafkaProducer.send_message(Constants.kafka_user_game_events_topic(),  user_game_move_event, Constants.kafka_user_game_move_event_key())
     {:noreply,socket}
   end
@@ -75,7 +75,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   def handle_in("verifying-game-status", %{"user_id" => user_id, "game_id" => game_id} , socket) do
     broadcast!(socket, "verifying-game", %{user_id: user_id , game_id: game_id} )
     #KafkaProducer.send_message(Constants.kafka_user_topic(),  %{user_id: user_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
-    Endpoint.broadcast_from!(self() , "game:spectate:chess:"<>game_id , "verifying-game" ,  %{user_id: user_id , game_id: game_id} )
+    Endpoint.broadcast_from!(self() , "spectate:chess:"<>game_id , "verifying-game" ,  %{user_id: user_id , game_id: game_id} )
     {:noreply,socket}
   end
 
@@ -83,7 +83,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     broadcast!(socket, "start-game-for-all", %{admin_id: admin_id , game_id: game_id, game_name: game_name} )
    # KafkaProducer.send_message(Constants.kafka_user_topic(),  %{admin_id: admin_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
 
-      Endpoint.broadcast_from!(self() , "game:spectate:chess:" <> game_id, "start-game-for-all", %{admin_id: admin_id , game_id: game_id, game_name: game_name} )
+      Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id, "start-game-for-all", %{admin_id: admin_id , game_id: game_id, game_name: game_name} )
     {:noreply,socket}
   end
 
@@ -103,7 +103,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     broadcast!(socket, "game-over", %{color_in_check_mate: color_in_check_mate  , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id} )
 
 
-    Endpoint.broadcast_from!(self() , "game:spectate:chess:" <> game_id , "game-over",   %{color_in_check_mate: color_in_check_mate , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id , game_id: game_id} )
+    Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "game-over",   %{color_in_check_mate: color_in_check_mate , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id , game_id: game_id} )
 
     # Reset Game Status for replay
     ChessServer.reset_game_state(game_id)
@@ -120,7 +120,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
   def handle_in("replay-false", %{"game_id" => game_id}, socket) do
     broadcast!(socket, "replay-false-event", %{} )
-    Endpoint.broadcast_from!(self() , "game:spectate:chess:" <> game_id , "replay-false-event",   %{} )
+    Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
     {:noreply,socket}
   end
 
@@ -131,7 +131,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
   def handle_in("replay-req-accepted" , %{"user_id" => user_id , "game_id" => game_id} , socket) do
     broadcast!(socket, "replay-accepted-by-user", %{user_id: user_id} )
-    Endpoint.broadcast_from!(self() , "game:spectate:chess:" <> game_id , "replay-accepted-by-user",   %{user_id: user_id} )
+    Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-accepted-by-user",   %{user_id: user_id} )
     {:noreply,socket}
   end
 

@@ -289,25 +289,13 @@ end
   end
 
   post "/update_player_status" do
-    %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "status" => status , "is_match" => is_match} = conn.body_params
+    %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "status" => status , "is_replay" => is_replay} = conn.body_params
 
     case game_name do
       "chess" -> case GameMutation.update_player_status(  game_id, game_name  , user_id , status) do
         :ok->  case ChessServer.update_player_status(game_id , user_id , status) do
 
-          {:ok , res} ->
-
-            IO.puts("NEw state is")
-            IO.inspect(res)
-
-            has_not_ready = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-ready" end)
-
-            if !has_not_ready && is_match do
-              Endpoint.broadcast!("game:chess:"<> game_id , "start-the-match" , %{})
-              Endpoint.broadcast!("game:spectate:chess:"<> game_id , "start-the-match" , %{})
-            end
-
-            conn
+          {:ok , res} ->  conn
           |> put_resp_content_type("application/json")
           |> send_resp(
             200,
@@ -678,7 +666,7 @@ end
         if !has_not_ready do
           IO.puts("Starting new game")
           Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
-          Endpoint.broadcast!("game:spectate:chess:"<> game_id , "start-the-replay-match" , %{})
+          Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
         end
 
         conn |>  put_resp_content_type("application/json")

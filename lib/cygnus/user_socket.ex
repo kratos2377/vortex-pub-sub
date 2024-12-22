@@ -9,7 +9,7 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
   channel "game:chess:*", VortexPubSub.Cygnus.ChessGameChannel
   channel "user:notifications:*", VortexPubSub.Cygnus.UserNotificationChannel
-  channel "game:spectate:chess:*", VortexPubSub.Cygnus.ChessSpectateChannel
+  channel "spectate:chess:*", VortexPubSub.Cygnus.ChessSpectateChannel
 
   @impl true
   def connect(%{"token" => token , "user_id" => user_id , "username" => username}, socket , _connect_info) do

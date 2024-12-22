@@ -1,14 +1,16 @@
 defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
   use VortexPubSubWeb, :channel
+  require Logger
   alias MaelStorm.ChessServer
   alias VortexPubSub.Presence
   alias VortexPubSub.Constants
 
 
 
-  def join("game:spectate:chess:" <> game_id, _params, socket) do
+  def join("spectate:chess:" <> game_id, _params, socket) do
     case ChessServer.game_pid(game_id) do
       pid when is_pid(pid) ->
+        IO.puts("Successfully joined spectate game socket")
         {:ok, socket}
 
       nil ->
@@ -20,6 +22,7 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
   end
 
 
+  @impl true
   def handle_in("new-user-joined" , %{user_id: user_id, username: username, game_id: game_id} , socket) do
     broadcast!(socket , Constats.kafka_user_joined_event_key() , %{user_id: user_id, username: username, game_id: game_id})
     {:noreply,socket}
