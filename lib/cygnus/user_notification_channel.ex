@@ -4,6 +4,7 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
     alias MaelStorm.ChessServer
     alias VortexPubSub.Presence
     alias VortexPubSub.Constants
+    alias VortexPubSub.Endpoint
 
     def join("user:notifications:" <> user_id, %{"token" => token , "user_id" => user_id}, socket) do
         #Add Logic to parse token and then join the user socket channel. Send JWT Token in Params and parse it using joken
@@ -23,6 +24,9 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
         end
 
     end
+
+
+    intercept ["game-invite-event", "match-found" , "publish-details-to-opponent", "match-found-detail"]
 
     def handle_in("friend-request-event" ,
     %{
@@ -61,19 +65,31 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
     end
 
 
-    def handle_in("match-found" , %{"index" => index} , socket) do
-        broadcast!(socket , "match-found" , %{index: index})
+    def handle_out("match-found" , payload , socket) do
+        broadcast!(socket , "match-found-for-users" , payload)
         {:noreply,socket}
     end
 
 
-    def handle_in("match-found-detail" , %{index: index , opponent_details: player , game_id: game_id} , socket) do
-        broadcast!(socket ,"match-found-detail" , %{index: index , opponent_details: player , game_id: game_id})
+    def handle_out("match-found-detail" , payload , socket) do
+        broadcast!(socket ,"match-found-detail-for-users" , payload)
+        {:noreply,socket}
+    end
+
+    def handle_out("publish-details-to-opponent" , payload , socket) do
+        broadcast!(socket , "publish-details-to-opponent-to-player" , payload)
         {:noreply,socket}
     end
 
     def handle_in("match-game-error" , %{} , socket) do
         broadcast!(socket , "match-game-error" , %{})
+        {:noreply,socket}
+    end
+
+
+
+    def handle_in("sharing-match-details" , %{opponent_id: opponent_id , player_username: player_username}) do
+        Endpoint.broadcast!("user:notifications:" <> opponent_id , "publish-details-to-opponent" , %{opponent_id: opponent_id , player_username: player_username} )
         {:noreply,socket}
     end
 end

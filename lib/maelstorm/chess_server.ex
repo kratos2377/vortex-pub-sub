@@ -44,11 +44,9 @@ defmodule MaelStorm.ChessServer do
     end
 
 
-    def replay_game(game_id) do
-
+    def start_interval_update(game_id) do
+      GenServer.call(via_tuple(game_id), {:start_interval_update})
     end
-
-
 
 
     #Server Callbacks
@@ -86,18 +84,62 @@ defmodule MaelStorm.ChessServer do
     def handle_call({:start_game}, _from, state) do
       res = ChessStateManager.check_game_start_status(state)
 
-      {:reply , res , state}
+      case res.status do
+        "LOBBY" -> {:reply , "error" , state}
+          "IN-PROGRESS" -> {:reply , "success" , res}
+            _ -> {:reply , "error" , state}
+      end
     end
+
 
 
     def handle_call({:reset_game_state}, _from, state) do
 
       res = ChessStateManager.reset_game_status(state)
-
-      IO.puts("New state after reset is")
-      IO.inspect(res)
-
       {:reply , :ok , res }
 
+    end
+
+    def handle_call({:start_interval_update} , _from, state) do
+
+      res = ChessStateManager.update_players_time(state)
+       case res.current_turn do
+         "white" -> case res.time_left_for_white_player do
+           0 -> {:reply , :time_over_for_white , res}
+             _ -> schedule_interval_update()
+             {:noreply, res}
+         end
+
+         "black" ->  case res.time_left_for_black_player do
+           0 -> {:reply , :time_over_for_black , res}
+             _ -> schedule_interval_update()
+             {:noreply , res}
+         end
+       end
+
+     end
+
+
+    def handle_info(:start_interval_update, state) do
+
+     res = ChessStateManager.update_players_time(state)
+      case res.current_turn do
+        "white" -> case res.time_left_for_white_player do
+          0 -> {:reply , :time_over_for_white , res}
+            _ -> schedule_interval_update()
+            {:noreply, res}
+        end
+
+        "black" ->  case res.time_left_for_black_player do
+          0 -> {:reply , :time_over_for_black , res}
+            _ -> schedule_interval_update()
+            {:noreply , res}
+        end
+      end
+
+    end
+
+    def schedule_interval_update() do
+      Process.send_after(self(), :start_interval_update, 1_000)
     end
 end

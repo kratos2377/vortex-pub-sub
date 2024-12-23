@@ -2,7 +2,10 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   use Phoenix.Socket
   require Logger
   alias Holmberg.Mutation.User, as: UserMutation
+  alias VortexPubSub.Endpint
+  alias VortexPubSub.MongoRepo
   use Joken.Config
+
 
   defoverridable init: 1
 
@@ -38,7 +41,6 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   end
 
   def connect(_params) do
-    Logger.info("THIS IS different connect fn")
     :error
   end
 
@@ -68,10 +70,17 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   end
 
   def on_disconnect(user_id) do
+
+    case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
+      user_model ->
+          Endpoint.broadcast!( "game:chess:" <> user_model.game_id , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model.username} )
+      _ -> Logger.info("No Game found for user")
+    end
+
     res = Task.async(fn -> case UserMutation.set_user_online(user_id, false) do
       {:ok , _} -> Logger.info("[SocketDisconnect] Changing User is_online status successful for user_id=#{user_id}")
 
-      {:error, _} -> Logger.error("[SocketDisconnect] Changing User is_online status unsuccessful for user_id=#{user_id}")
+      {:error, _} -> Logger.info("[SocketDisconnect] Changing User is_online status unsuccessful for user_id=#{user_id}")
     end
      end)
     Task.await(res)

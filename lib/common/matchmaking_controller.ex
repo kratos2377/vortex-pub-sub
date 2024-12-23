@@ -48,9 +48,6 @@ def make_user_ticket_changeset(user_id , username, score , game_type) do
   min_score =max(0 , score- 900)
 
   game_type_num = get_game_type_value(game_type)
-  IO.puts("GAME TYPE is")
-  IO.puts(game_type_num)
-
   user_ticket_changeset = %{
     MatchParameters: [
       %{
@@ -70,12 +67,19 @@ def make_user_ticket_changeset(user_id , username, score , game_type) do
       }
     ],
     PlayerId: user_id,
-    PlayerUsername: username,
     PlayerParameters: [
-        %{
-          Type: "score",
-          Value: score
-        }
+      %{
+        Type: "score_max_limit",
+        Value: max_score
+      },
+      %{
+        Type: "score_min_limit",
+        Value: min_score
+      },
+      %{
+        Type: "game_type",
+        Value: game_type_num
+      }
     ]
   }
 

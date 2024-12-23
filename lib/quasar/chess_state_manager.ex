@@ -42,15 +42,25 @@ defmodule Quasar.ChessStateManager do
     has_not_ready = Enum.any?(chess_state.player_ready_status, fn {_key, value} -> value == "not-ready" end)
 
   if has_not_ready do
-    "error"
+    chess_state
   else
-    "success"
+    %{chess_state |  time_left_for_white_player: 900, time_left_for_black_player: 900 , current_turn: "white" , status: "IN-PROGRESS"}
   end
   end
 
   def reset_game_status(%ChessState{} = chess_state) do
     new_status_map = Map.new(chess_state.player_ready_status , fn {key, _value} -> {key, "not-ready"} end)
-    %{chess_state | player_ready_status: new_status_map , time_left_for_white_player: 900, time_left_for_black_player: 900}
+    %{chess_state | player_ready_status: new_status_map , time_left_for_white_player: 900, time_left_for_black_player: 900 , current_turn: "white" , status: "IN-PROGRESS"}
+  end
+
+
+  def update_players_time(%ChessState{} = chess_state) do
+
+    case chess_state.current_turn do
+      "white" ->  %{chess_state | time_left_for_white_player: max(0 , chess_state.time_left_for_white_player - 1)}
+      "black" -> %{chess_state | time_left_for_black_player: max(0 , chess_state.time_left_for_black_player - 1)}
+    end
+
   end
 
 end
