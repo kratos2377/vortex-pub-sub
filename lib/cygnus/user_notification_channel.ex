@@ -26,7 +26,7 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
     end
 
 
-    intercept ["game-invite-event", "match-found" , "publish-details-to-opponent", "match-found-detail"]
+    intercept ["game-invite-event", "match-found" , "match-found-details"]
 
     def handle_in("friend-request-event" ,
     %{
@@ -71,25 +71,17 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
     end
 
 
-    def handle_out("match-found-detail" , payload , socket) do
+    def handle_out("match-found-details" , payload , socket) do
         broadcast!(socket ,"match-found-detail-for-users" , payload)
         {:noreply,socket}
     end
 
-    def handle_out("publish-details-to-opponent" , payload , socket) do
-        broadcast!(socket , "publish-details-to-opponent-to-player" , payload)
-        {:noreply,socket}
-    end
 
     def handle_in("match-game-error" , %{} , socket) do
-        broadcast!(socket , "match-game-error" , %{})
+        broadcast!(socket , "match-game-error-for-users" , %{})
         {:noreply,socket}
     end
 
 
 
-    def handle_in("sharing-match-details" , %{opponent_id: opponent_id , player_username: player_username}) do
-        Endpoint.broadcast!("user:notifications:" <> opponent_id , "publish-details-to-opponent" , %{opponent_id: opponent_id , player_username: player_username} )
-        {:noreply,socket}
-    end
 end

@@ -37,8 +37,8 @@ defmodule Holmberg.Mutation.Game do
     game_id = Ecto.UUID.generate()
     #Only Chess is supported as of now
     game_changeset = create_match_game_changeset(game_id, game_type , "chess")
-    match_user_changeset_first = create_user_match_relation_changeset(game_id, player1["PlayerId"], player1["PlayerUsername"])
-    match_user_changeset_second = create_user_match_relation_changeset(game_id, player2["PlayerId"], player2["PlayerUsername"])
+    match_user_changeset_first = create_user_match_relation_changeset(game_id, player1.user_id, player1.username)
+    match_user_changeset_second = create_user_match_relation_changeset(game_id, player2.user_id, player2.username)
     user_turn_mapping_changeset = create_match_turns_mapping_changeset(game_id, player1 , player2)
 
     case Mongo.insert_one(:mongo , "games", game_changeset) do
@@ -238,14 +238,14 @@ defmodule Holmberg.Mutation.Game do
       turn_mappings: [
         %{
           count_id: 1,
-          user_id: player1["PlayerId"],
-          username: player1["PlayerUsername"]
+          user_id: player1.user_id,
+          username: player1.username
         },
 
         %{
           count_id: 2,
-          user_id:  player2["PlayerId"],
-          username: player2["PlayerUsername"]
+          user_id:  player2.user_id,
+          username: player2.username
         }
       ]
     }
