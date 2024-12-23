@@ -71,11 +71,11 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
   def on_disconnect(user_id) do
 
-    case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
-      user_model ->
-          Endpoint.broadcast!( "game:chess:" <> user_model.game_id , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model.username} )
-      _ -> Logger.info("No Game found for user")
-    end
+    # case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
+    #   user_model ->
+    #       Endpoint.broadcast!( "game:chess:" <> user_model.game_id , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model.username} )
+    #   _ -> Logger.info("No Game found for user")
+    # end
 
     res = Task.async(fn -> case UserMutation.set_user_online(user_id, false) do
       {:ok , _} -> Logger.info("[SocketDisconnect] Changing User is_online status successful for user_id=#{user_id}")

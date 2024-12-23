@@ -20,7 +20,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     end
   end
 
-  intercept ["joined-room" , "start-the-replay-match"]
+  intercept ["joined-room" , "start-the-replay-match" , "start-the-match"]
   def handle_out("joined-room", payload, socket) do
     #Add logic to prevent user from joining if the game is in progress
     broadcast!(socket, "new-user-joined", %{user_id: payload.user_id, username: payload.username, game_id: payload.game_id})
@@ -136,8 +136,8 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   end
 
 
-  def handle_in("start-the-match", %{}, socket) do
-    broadcast!(socket, "start-the-match-for-users", %{} )
+  def handle_out("start-the-match", payload, socket) do
+    broadcast!(socket, "start-the-match-for-users", payload )
     {:noreply,socket}
   end
 

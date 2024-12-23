@@ -20,9 +20,7 @@ defmodule VortexPubSub.PublishMessages do
   end
 
 
-  def start_async_publishing(topic , data , key) do
-    Endpoint.brodcast!(topic , key , data)
-  end
+
 
 
   defp make_game_room_and_publish_data(key , data) do
@@ -74,5 +72,10 @@ defmodule VortexPubSub.PublishMessages do
             start_async_publishing(topic2 , %{} , "match-game-error")
     end
 
+  end
+
+
+  def start_async_publishing(topic , data , key) do
+    Endpoint.broadcast!(topic , key , data)
   end
 end
