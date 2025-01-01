@@ -1,8 +1,10 @@
 defmodule MaelStorm.ChessServer do
     use GenServer
+    use VortexPubSubWeb, :channel
     require Logger
     alias Quasar.ChessStateManager
     alias GameState.ChessState
+    alias VortexPubSub.Endpoint
 
 
     def start_link(%ChessState{} = chess_state) do
@@ -102,44 +104,95 @@ defmodule MaelStorm.ChessServer do
 
     def handle_call({:start_interval_update} , _from, state) do
 
-      res = ChessStateManager.update_players_time(state)
-       case res.current_turn do
-         "white" -> case res.time_left_for_white_player do
-           0 -> {:reply , :time_over_for_white , res}
-             _ -> schedule_interval_update()
-             {:noreply, res}
-         end
+        case state.status do
+          "IN-PROGRESS" ->
+            res = ChessStateManager.update_players_time(state)
+          case res.current_turn do
+            "white" -> case res.time_left_for_white_player do
+              0 ->
+                game_finished("white" , state)
+                {:noreply , res}
+                _ -> schedule_interval_update()
+                {:noreply, res}
+            end
 
-         "black" ->  case res.time_left_for_black_player do
-           0 -> {:reply , :time_over_for_black , res}
-             _ -> schedule_interval_update()
-             {:noreply , res}
-         end
-       end
+            "black" ->  case res.time_left_for_black_player do
+              0 ->
+                game_finished("black" , state)
+                {:noreply ,  res}
+                _ -> schedule_interval_update()
+                {:noreply , res}
+            end
+          end
+
+          _ -> Logger.info("Game has either been stopped or in lobby state for gameId=#{state.game_id}")
+        end
 
      end
 
 
     def handle_info(:start_interval_update, state) do
 
-     res = ChessStateManager.update_players_time(state)
-      case res.current_turn do
-        "white" -> case res.time_left_for_white_player do
-          0 -> {:reply , :time_over_for_white , res}
-            _ -> schedule_interval_update()
-            {:noreply, res}
+      case state.status do
+        "IN-PROGRESS" ->
+          res = ChessStateManager.update_players_time(state)
+        case res.current_turn do
+          "white" -> case res.time_left_for_white_player do
+            0 ->
+              game_finished("white" , state)
+              {:noreply  , res}
+              _ -> schedule_interval_update()
+              {:noreply, res}
+          end
+
+          "black" ->  case res.time_left_for_black_player do
+            0 ->
+              game_finished("black" , state)
+              {:noreply , res}
+              _ -> schedule_interval_update()
+              {:noreply , res}
+          end
         end
 
-        "black" ->  case res.time_left_for_black_player do
-          0 -> {:reply , :time_over_for_black , res}
-            _ -> schedule_interval_update()
-            {:noreply , res}
-        end
+        _ -> Logger.info("Game has either been stopped or in lobby state for gameId=#{state.game_id}")
       end
+
+    end
+
+
+    def game_finished(player_color , state) do
+
+        case player_color do
+          "white" ->
+
+              white_player = Enum.at(state.turn_map , 0)
+              Endpoint.broadcast!("game:chess:"<> state.game_id , "game-over-time" , white_player)
+              Endpoint.broadcast!("spectate:chess:"<> state.game_id , "game-over-time" , white_player)
+
+            "black" ->
+
+              black_player = Enum.at(state.turn_map , 1)
+              Endpoint.broadcast!("game:chess:"<> state.game_id , "game-over-time" , black_player)
+              Endpoint.broadcast!("spectate:chess:"<> state.game_id , "game-over-time" , black_player)
+        end
 
     end
 
     def schedule_interval_update() do
       Process.send_after(self(), :start_interval_update, 1_000)
+    end
+
+
+    def terminate(reason, _game) do
+      :ok
+    end
+
+
+    def terminate(reason, game) do
+      :ok
+    end
+
+    def terminate(_reason, _game) do
+      :ok
     end
 end

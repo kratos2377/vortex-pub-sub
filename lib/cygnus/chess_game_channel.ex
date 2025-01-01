@@ -6,6 +6,8 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   alias VortexPubSub.Endpoint
   alias VortexPubSub.KafkaProducer
   alias VortexPubSub.Constants
+  alias VortexPubSub.KafkaProducer
+  alias Pulsar.ChessSupervisor
 
   def join("game:chess:" <> game_id, _params, socket) do
     case ChessServer.game_pid(game_id) do
@@ -20,7 +22,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     end
   end
 
-  intercept ["joined-room" , "start-the-replay-match" , "start-the-match"]
+  intercept ["joined-room" , "start-the-replay-match" , "start-the-match" , "game-over-time"]
   def handle_out("joined-room", payload, socket) do
     #Add logic to prevent user from joining if the game is in progress
     broadcast!(socket, "new-user-joined", %{user_id: payload.user_id, username: payload.username, game_id: payload.game_id})
@@ -120,6 +122,10 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   def handle_in("replay-false", %{"game_id" => game_id}, socket) do
     broadcast!(socket, "replay-false-event", %{} )
     Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+
+    KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: user_id , game_id: user_model.game_id}, Constants.kafka_game_general_event_key())
+    ChessSupervisor.stop_game(user_model.game_id)
+
     {:noreply,socket}
   end
 
@@ -139,6 +145,11 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   def handle_out("start-the-match", payload, socket) do
     broadcast!(socket, "start-the-match-for-users", payload )
     {:noreply,socket}
+  end
+
+  def handle_out("game-over-time" , payload , socket) do
+    broadcast!(socket , "game-over-time-for-users" , payload)
+    {:noreply , socket}
   end
 
 

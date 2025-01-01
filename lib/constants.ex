@@ -4,6 +4,7 @@ defmodule VortexPubSub.Constants do
   def kafka_game_topic, do: "game"
   def kafka_user_topic, do: "user"
   def kafka_user_game_events_topic, do: "user_game_events"
+  def kafka_user_game_deletion_topic, do: "user_game_deletion"
 
 
   #Kafka Key Constants

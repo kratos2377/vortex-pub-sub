@@ -4,6 +4,7 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   alias Holmberg.Mutation.User, as: UserMutation
   alias VortexPubSub.Endpint
   alias VortexPubSub.MongoRepo
+  alias Pulsar.ChessSupervisor
   use Joken.Config
 
 
@@ -71,11 +72,15 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
   def on_disconnect(user_id) do
 
-    # case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
-    #   user_model ->
-    #       Endpoint.broadcast!( "game:chess:" <> user_model.game_id , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model.username} )
-    #   _ -> Logger.info("No Game found for user")
-    # end
+    case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
+      user_model ->
+
+    KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: user_id , game_id: user_model.game_id}, Constants.kafka_game_general_event_key())
+        ChessSupervisor.stop_game(user_model.game_id)
+          Endpoint.broadcast!( "game:chess:" <> user_model.game_id , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model.username} )
+          Endpoint.broadcast!( "spectate:chess:" <> user_model.game_id , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model.username} )
+      _ -> Logger.info("No Game found for user")
+    end
 
     res = Task.async(fn -> case UserMutation.set_user_online(user_id, false) do
       {:ok , _} -> Logger.info("[SocketDisconnect] Changing User is_online status successful for user_id=#{user_id}")
