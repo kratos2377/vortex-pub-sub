@@ -50,6 +50,10 @@ defmodule MaelStorm.ChessServer do
       GenServer.call(via_tuple(game_id), {:start_interval_update})
     end
 
+    def summary(game_id) do
+      GenServer.call(via_tuple(game_id), {:get_summary})
+    end
+
 
     #Server Callbacks
 
@@ -66,6 +70,11 @@ defmodule MaelStorm.ChessServer do
       end
 
 
+    end
+
+
+    def handle_call({:get_summary}, _from, state) do
+        {:reply , state , state}
     end
 
     def handle_call({:leave_lobby, user_id }, _from, state) do

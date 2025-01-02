@@ -11,6 +11,7 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
     case ChessServer.game_pid(game_id) do
       pid when is_pid(pid) ->
         IO.puts("Successfully joined spectate game socket")
+        send(self(), {:after_join, game_id})
         {:ok, socket}
 
       nil ->
@@ -19,6 +20,16 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
       _ -> IO.puts("Error While joining chess spectate channel")
         {:error, %{reason: "Game does not exist"}}
     end
+  end
+
+
+  def handle_info({:after_join, game_id}, socket) do
+    summary = ChessServer.summary(game_id)
+
+    push(socket, "game_current_state", summary)
+
+
+    {:noreply, socket}
   end
 
   intercept ["new-user-joined" ,"start-game-for-all" ,  "remove-all-users" , "user-left-room" , "user-status-update" , "game-event" ,
