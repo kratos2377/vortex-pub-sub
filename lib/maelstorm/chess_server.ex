@@ -1,6 +1,5 @@
 defmodule MaelStorm.ChessServer do
     use GenServer
-    use VortexPubSubWeb, :channel
     require Logger
     alias Quasar.ChessStateManager
     alias GameState.ChessState
@@ -197,9 +196,9 @@ defmodule MaelStorm.ChessServer do
     end
 
 
-    def terminate(reason, game) do
-      :ok
-    end
+    # def terminate(reason, game) do
+    #   :ok
+    # end
 
     def terminate(_reason, _game) do
       :ok

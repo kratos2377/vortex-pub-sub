@@ -1,8 +1,6 @@
 defmodule VortexPubSub.Cygnus.ChessGameChannel do
   use VortexPubSubWeb, :channel
-  alias Phoenix.Socket.Broadcast
   alias MaelStorm.ChessServer
-  alias VortexPubSub.Presence
   alias VortexPubSub.Endpoint
   alias VortexPubSub.Constants
   alias VortexPubSub.KafkaProducer

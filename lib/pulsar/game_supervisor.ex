@@ -10,10 +10,10 @@ defmodule Pulsar.GameSupervisorApplication do
   def init(_init_arg) do
     children = [
 
+      Pulsar.ChessSupervisor,
       {Registry, keys: :unique, name: VortexPubSub.Pulsar.ChessRegistry},
       #{Registry, keys: :unique, name: VortexPubSub.Pulsar.ScribbleRegistry},
       #{Registry, keys: :unique, name: VortexPubSub.Pulsar.PokerRegistry},
-      Pulsar.ChessSupervisor,
       #Pulsar.ScribbleSupervisor,
       # Pulsar.PokerSupervisor,
     ]

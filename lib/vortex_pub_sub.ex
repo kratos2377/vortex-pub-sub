@@ -6,11 +6,11 @@ defmodule VortexPubSub do
 
     # supervisor children
     children = [
-      {Task.Supervisor, name: VortexPubSub.UserSocketSupervisor},
       #{Registry, keys: :unique, name: VortexPubSub.Pulsar.ChessRegistry},
-   #   Pulsar.UserSupervisor,
-      Pulsar.GameSupervisorApplication,
+      #   Pulsar.UserSupervisor,
       {Phoenix.PubSub, name: VortexPubSub.PubSub},
+      {Task.Supervisor, name: VortexPubSub.UserSocketSupervisor},
+      Pulsar.GameSupervisorApplication,
       {VortexPubSub.Presence, []},
       worker(Mongo, [[name: :mongo, url: "mongodb://admin:adminpassword@localhost/user_game_events_db?authSource=admin", pool_size: 5]]),
      # {VortexPubSub.MongoRepo , []},

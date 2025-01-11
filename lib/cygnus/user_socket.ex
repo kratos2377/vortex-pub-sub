@@ -2,7 +2,8 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   use Phoenix.Socket
   require Logger
   alias Holmberg.Mutation.User, as: UserMutation
-  alias VortexPubSub.Endpint
+  alias VortexPubSub.Endpoint
+  alias VortexPubSub.Constants
   alias VortexPubSub.MongoRepo
   alias Pulsar.ChessSupervisor
   use Joken.Config
