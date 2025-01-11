@@ -26,7 +26,7 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
     end
 
 
-    intercept ["game-invite-event", "match-found" , "match-found-details" , "match-game-error"]
+    intercept ["match-found" , "match-found-details" , "match-game-error"]
 
     def handle_in("friend-request-event" ,
     %{
@@ -45,7 +45,7 @@ defmodule VortexPubSub.Cygnus.UserNotificationChannel do
         {:noreply,socket}
     end
 
-    def handle_out("game-invite-event" ,
+    def handle_in("game-invite-event" ,
     %{
         "user_who_send_request_id" => user_who_send_request_id,
         "user_who_send_request_username" => user_who_send_request_username,
