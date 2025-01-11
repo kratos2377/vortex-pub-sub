@@ -4,7 +4,6 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   alias MaelStorm.ChessServer
   alias VortexPubSub.Presence
   alias VortexPubSub.Endpoint
-  alias VortexPubSub.KafkaProducer
   alias VortexPubSub.Constants
   alias VortexPubSub.KafkaProducer
   alias Pulsar.ChessSupervisor
@@ -119,12 +118,12 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   end
 
 
-  def handle_in("replay-false", %{"game_id" => game_id}, socket) do
+  def handle_in("replay-false", %{"game_id" => game_id , "user_id" => user_id}, socket) do
     broadcast!(socket, "replay-false-event", %{} )
     Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
 
-    KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: user_id , game_id: user_model.game_id}, Constants.kafka_game_general_event_key())
-    ChessSupervisor.stop_game(user_model.game_id)
+    KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: user_id , game_id: game_id}, Constants.kafka_game_general_event_key())
+    ChessSupervisor.stop_game(game_id)
 
     {:noreply,socket}
   end
