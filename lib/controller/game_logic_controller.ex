@@ -295,7 +295,7 @@ end
             has_not_ready = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-ready" end)
 
             if !has_not_ready && is_match do
-              Endpoint.broadcast!( "game:chess:" <> game_id , "start-the-match" , %{})
+              Endpoint.broadcast!( "game:chess:" <> game_id , "start-the-match" , %{game_id: game_id})
             end
 
             conn
@@ -668,6 +668,7 @@ end
         if !has_not_ready do
           Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
           Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
+          ChessServer.start_game(game_id)
         end
 
         conn |>  put_resp_content_type("application/json")

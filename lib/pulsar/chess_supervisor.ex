@@ -3,7 +3,6 @@ defmodule Pulsar.ChessSupervisor do
   require Logger
   alias GameState.ChessState
   alias MaelStorm.ChessServer
-  alias VortexPubSub.KafkaProducer
 
   def start_link(_arg) do
     DynamicSupervisor.start_link(__MODULE__, :ok, name: __MODULE__)
@@ -73,7 +72,12 @@ defmodule Pulsar.ChessSupervisor do
 
   def stop_game(game_id) do
     #:ets.delete(:games_table, game_id)
-    child_gen_id = ChessServer.game_pid(game_id)
-    DynamicSupervisor.terminate_child(__MODULE__, child_gen_id)
+    case ChessServer.game_pid(game_id) do
+      pid when is_pid(pid) -> DynamicSupervisor.terminate_child(__MODULE__, pid)
+      nil ->
+        Logger.info("GAME Process not found")
+        {:error , :not_found}
+    end
+
   end
 end

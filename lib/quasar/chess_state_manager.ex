@@ -2,6 +2,7 @@ defmodule Quasar.ChessStateManager do
 
   @max_players 2
   alias GameState.ChessState
+  alias GameState.ChessState
   import Holmberg.Schemas.TurnModel
 
   def add_new_player(%ChessState{} = chess_state ,user_id, username) do
@@ -61,6 +62,13 @@ defmodule Quasar.ChessStateManager do
       "black" -> %{chess_state | time_left_for_black_player: max(0 , chess_state.time_left_for_black_player - 1)}
     end
 
+  end
+
+  def change_turn(%ChessState{} = chess_state) do
+    case chess_state.current_turn do
+      "white" -> %{chess_state | current_turn: "black"}
+      "black" -> %{chess_state | current_turn: "white"}
+    end
   end
 
 end

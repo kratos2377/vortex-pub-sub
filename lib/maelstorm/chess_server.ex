@@ -49,8 +49,13 @@ defmodule MaelStorm.ChessServer do
       GenServer.call(via_tuple(game_id), {:start_interval_update})
     end
 
+    @spec summary(any()) :: any()
     def summary(game_id) do
       GenServer.call(via_tuple(game_id), {:get_summary})
+    end
+
+    def change_player_turn(game_id) do
+      GenServer.call(via_tuple(game_id), {:change_player_turn})
     end
 
 
@@ -96,7 +101,9 @@ defmodule MaelStorm.ChessServer do
 
       case res.status do
         "LOBBY" -> {:reply , "error" , state}
-          "IN-PROGRESS" -> {:reply , "success" , res}
+          "IN-PROGRESS" ->
+            schedule_interval_update()
+            {:reply , "success" , res}
             _ -> {:reply , "error" , state}
       end
     end
@@ -108,6 +115,12 @@ defmodule MaelStorm.ChessServer do
       res = ChessStateManager.reset_game_status(state)
       {:reply , :ok , res }
 
+    end
+
+
+    def handle_call({:change_player_turn}, _from, state) do
+      res = ChessStateManager.change_turn(state)
+      {:reply , :ok , res}
     end
 
     def handle_call({:start_interval_update} , _from, state) do
@@ -158,6 +171,8 @@ defmodule MaelStorm.ChessServer do
               game_finished("black" , state)
               {:noreply , res}
               _ -> schedule_interval_update()
+              IO.inspect("NEW RES After time update is IS")
+              IO.inspect(res)
               {:noreply , res}
           end
         end
@@ -196,9 +211,9 @@ defmodule MaelStorm.ChessServer do
     end
 
 
-    # def terminate(reason, game) do
-    #   :ok
-    # end
+    def terminate(reason, game) do
+      :ok
+    end
 
     def terminate(_reason, _game) do
       :ok

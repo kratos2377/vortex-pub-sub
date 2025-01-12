@@ -58,7 +58,6 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
 
 
   def handle_out("game-event" ,  payload  , socket) do
-    IO.puts("New user game move event recieved")
     broadcast!(socket , Constants.kafka_user_game_move_event_key() ,  payload )
     {:noreply,socket}
   end

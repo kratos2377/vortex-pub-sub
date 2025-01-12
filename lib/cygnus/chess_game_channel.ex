@@ -67,7 +67,9 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
       Endpoint.broadcast_from!(self() , "spectate:chess:"<>game_id , "game-event" ,   %{user_id: user_id, game_id: game_id, game_event: game_event, event_type: event_type} )
       KafkaProducer.send_message(Constants.kafka_user_game_events_topic(),  user_game_move_event, Constants.kafka_user_game_move_event_key())
-    {:noreply,socket}
+      ChessServer.change_player_turn(game_id)
+
+      {:noreply,socket}
   end
 
   def handle_in("verifying-game-status", %{"user_id" => user_id, "game_id" => game_id} , socket) do
@@ -141,6 +143,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
   def handle_out("start-the-match", payload, socket) do
     broadcast!(socket, "start-the-match-for-users", payload )
+    ChessServer.start_game(payload["game_id"])
     {:noreply,socket}
   end
 
