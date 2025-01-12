@@ -33,7 +33,8 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
   end
 
   intercept ["new-user-joined" ,"start-game-for-all" ,  "remove-all-users" , "user-left-room" , "user-status-update" , "game-event" ,
-  "verifying-game" , "game-over", "start-the-replay-match" , "replay-false-event" , "replay-accepted-by-user" , "start-the-match", "game-over-time"]
+  "verifying-game" , "game-over", "start-the-replay-match" , "replay-false-event" , "replay-accepted-by-user" , "start-the-match",
+  "game-over-time", "default-win-because-user-left"]
 
   def handle_out("new-user-joined" , payload , socket) do
     broadcast!(socket , Constants.kafka_user_joined_event_key() , payload)
@@ -103,6 +104,11 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
   def handle_out("game-over-time", payload, socket) do
     broadcast!(socket, "game-over-time-for-spectators", payload )
     {:noreply,socket}
+  end
+
+  def handle_out("default-win-because-user-left" , payload , socket) do
+    broadcast!(socket , "send-spectator-default-win-because-user-left" , payload)
+    {:noreply , socket}
   end
 
 

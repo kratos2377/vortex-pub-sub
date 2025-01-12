@@ -19,7 +19,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     end
   end
 
-  intercept ["joined-room" , "start-the-replay-match" , "start-the-match" , "game-over-time"]
+  intercept ["joined-room" , "start-the-replay-match" , "start-the-match" , "game-over-time" , "default-win-because-user-left"]
   def handle_out("joined-room", payload, socket) do
     #Add logic to prevent user from joining if the game is in progress
     broadcast!(socket, "new-user-joined", %{user_id: payload.user_id, username: payload.username, game_id: payload.game_id})
@@ -152,6 +152,10 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     {:noreply , socket}
   end
 
+  def handle_out("default-win-because-user-left" , payload , socket) do
+    broadcast!(socket , "send-user-default-win-because-user-left" , payload)
+    {:noreply , socket}
+  end
 
   #Add stalemate events
 
