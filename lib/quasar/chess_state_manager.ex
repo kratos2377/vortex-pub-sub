@@ -71,4 +71,8 @@ defmodule Quasar.ChessStateManager do
     end
   end
 
+  def get_players_data(%ChessState{} = chess_state) do
+    chess_state.turn_map
+  end
+
 end

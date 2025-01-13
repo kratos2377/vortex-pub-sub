@@ -6,6 +6,7 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   alias VortexPubSub.Constants
   alias VortexPubSub.MongoRepo
   alias Pulsar.ChessSupervisor
+  alias MaelStorm.ChessServer
   alias VortexPubSub.KafkaProducer
   use Joken.Config
 
@@ -78,6 +79,10 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
     case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
       user_model ->
+
+        res = ChessServer.get_players_data(user_model["game_id"])
+        IO.inspect("PLAYERS DATA IS")
+        IO.inspect(res)
 
         Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"]} )
         Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"]} )

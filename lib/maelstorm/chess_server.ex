@@ -59,6 +59,11 @@ defmodule MaelStorm.ChessServer do
     end
 
 
+    def get_players_data(game_id) do
+      GenServer.call(via_tuple(game_id), {:get_players_data})
+    end
+
+
     #Server Callbacks
 
     def init({chess_state}) do
@@ -121,6 +126,12 @@ defmodule MaelStorm.ChessServer do
     def handle_call({:change_player_turn}, _from, state) do
       res = ChessStateManager.change_turn(state)
       {:reply , :ok , res}
+    end
+
+
+    def handle_call({:get_players_data}, _from, state) do
+      res = ChessStateManager.get_players_data(state)
+      {:reply , res , state}
     end
 
     def handle_call({:start_interval_update} , _from, state) do
