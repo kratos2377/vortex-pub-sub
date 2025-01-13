@@ -11,6 +11,13 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   use Joken.Config
 
 
+  defimpl Jason.Encoder, for: BSON.ObjectId do
+    def encode(val, _opts \\ []) do
+      BSON.ObjectId.encode!(val)
+      |> Jason.encode!()
+    end
+  end
+
   defoverridable init: 1
 
   channel "game:chess:*", VortexPubSub.Cygnus.ChessGameChannel
@@ -80,10 +87,12 @@ defmodule VortexPubSub.Cygnus.UserSocket do
     case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
       nil -> Logger.info("No Game found for user")
 
-      user_model ->
+      user_model_res ->
 
         IO.inspect("USER MODEL FOUND IS")
-        IO.inspect(user_model)
+        IO.inspect(user_model_res)
+
+        {:ok , user_model} = Jason.encode(user_model_res)
 
         res = ChessServer.get_players_data(user_model["game_id"])
         filtered_user = Enum.filter(res , fn user -> user.user_id != user_model["id"] end)
