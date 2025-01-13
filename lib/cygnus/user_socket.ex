@@ -78,6 +78,8 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
 
     case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
+      nil -> Logger.info("No Game found for user")
+
       user_model ->
 
         res = ChessServer.get_players_data(user_model["game_id"])
@@ -90,7 +92,7 @@ defmodule VortexPubSub.Cygnus.UserSocket do
         ChessSupervisor.stop_game(user_model["game_id"])
 
         KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: user_id , game_id: user_model["game_id"]}, Constants.kafka_game_general_event_key())
-      _ -> Logger.info("No Game found for user")
+
     end
 
     res = Task.async(fn -> case UserMutation.set_user_online(user_id, false) do
