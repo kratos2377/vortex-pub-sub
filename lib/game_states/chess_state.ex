@@ -1,6 +1,7 @@
 defmodule GameState.ChessState do
 
   import Holmberg.Schemas.TurnModel
+  @derive [Jason.Encoder]
 
 
   defstruct game_id: "", turn_map: [], turn_count: 0, total_players: 0, time_left_for_white_player: 0, time_left_for_black_player: 0, player_count_index: 0, current_turn: "", status: "", player_ready_status: %{}

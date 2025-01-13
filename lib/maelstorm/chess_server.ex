@@ -182,8 +182,6 @@ defmodule MaelStorm.ChessServer do
               game_finished("black" , state)
               {:noreply , res}
               _ -> schedule_interval_update()
-              IO.inspect("NEW RES After time update is IS")
-              IO.inspect(res)
               {:noreply , res}
           end
         end

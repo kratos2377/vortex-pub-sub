@@ -82,12 +82,15 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
       user_model ->
 
-        res = ChessServer.get_players_data(user_model["game_id"])
-        IO.inspect("PLAYERS DATA IS")
-        IO.inspect(res)
+        IO.inspect("USER MODEL FOUND IS")
+        IO.inspect(user_model)
 
-        Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"]} )
-        Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"]} )
+        res = ChessServer.get_players_data(user_model["game_id"])
+        filtered_user = Enum.filter(res , fn user -> user.user_id != user_model["id"] end)
+        won_user = Enum.at(filtered_user , 0)
+
+        Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"] , user_id_who_won: won_user["user_id"] , user_username_who_won: won_user["username"]} )
+        Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"], user_id_who_won: won_user["user_id"] , user_username_who_won: won_user["username"]} )
 
         ChessSupervisor.stop_game(user_model["game_id"])
 

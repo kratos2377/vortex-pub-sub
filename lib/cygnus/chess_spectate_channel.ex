@@ -26,7 +26,9 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
   def handle_info({:after_join, game_id}, socket) do
     summary = ChessServer.summary(game_id)
 
-    push(socket, "game_current_state", summary)
+    {:ok , encoded_data} = Jason.encode(summary)
+
+    push(socket, "game_current_state", %{data: encoded_data})
 
 
     {:noreply, socket}
@@ -70,7 +72,6 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
   end
 
   def handle_out("start-game-for-all" , payload , socket) do
-    IO.puts("New start game for all event recieved")
     broadcast!(socket , "start-game-for-spectators" , payload )
     {:noreply,socket}
   end
