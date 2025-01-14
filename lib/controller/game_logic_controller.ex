@@ -617,13 +617,6 @@ end
     end
   end
 
-  # post "/stake_in_game" do
-  #   %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "username" => username} = conn.body_params
-
-
-
-  # end
-
   post "/create_ticket_and_find_match" do
       %{"user_id" => user_id, "username" => username,"score" => score , "game_type" => game_type} = conn.body_params
 
