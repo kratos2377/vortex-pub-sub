@@ -659,15 +659,42 @@ end
         has_not_ready = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-ready" end)
 
         if !has_not_ready do
-          Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
-          Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
-          ChessServer.start_game(game_id)
+
+          case ChessServer.start_game(game_id) do
+                 "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
+                   {:ok, _} ->
+
+
+
+                    KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id}, Constants.kafka_game_general_event_key())
+
+                    conn
+                    |> put_resp_content_type("application/json")
+                    |> send_resp(
+                      200,
+                      Jason.encode!(%{result: %{ success: true}})
+                    )
+
+                    Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
+                    Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
+
+                    _ ->
+
+                      Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{} )
+                      Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+                 end
+                  "error" ->
+                    Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{} )
+                    Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+          end
+
+
         end
 
         conn |>  put_resp_content_type("application/json")
       |> send_resp(
         200,
-        Jason.encode!(%{result: %{ success: true},  message: "Deleted Matchmaking Ticket"})
+        Jason.encode!(%{result: %{ success: true},  message: "Applied for replay successfully"})
       )
 
       _ ->  conn |>   put_resp_content_type("application/json") |> send_resp(
@@ -675,6 +702,81 @@ end
         Jason.encode!(%{result: %{ success: false},  error_message: "Error while setting status"})
       )
     end
+  end
+
+
+  post "/stake_in_game" do
+    #Use this to publish kafka event to update and send socket events
+    %{"user_who_is_betting" => user_who_is_betting , "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} = conn.body_params
+
+
+    case Mongo.find_one(:mongo , "users", %{user_id: user_betting_on, game_id: game_id }) do
+
+        nil ->
+          conn |> put_resp_content_type("application/json") |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game or Player. Cannot Place Bet"})
+          )
+
+
+        user_model -> case ChessServer.check_if_stake_is_possible(game_id) do
+          :ok ->
+
+
+            conn |> put_resp_content_type("application/json") |> send_resp(
+              200,
+              Jason.encode!(%{result: %{ success: true},  error_message: "Can place bet"})
+            )
+
+            _ ->
+
+              conn |> put_resp_content_type("application/json") |> send_resp(
+                400,
+                Jason.encode!(%{result: %{ success: false},  error_message: "Total 5 mins have passed since game started. Cannot Place bet anymore"})
+              )
+        end
+
+    end
+
+
+
+  end
+
+
+  post "/check_stake_status" do
+    %{"user_who_is_betting" => user_who_is_betting , "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type} = conn.body_params
+
+
+    case Mongo.find_one(:mongo , "users", %{user_id: user_betting_on, game_id: game_id }) do
+
+        nil ->
+          conn |> put_resp_content_type("application/json") |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game or Player. Cannot Place Bet"})
+          )
+
+
+        user_model -> case ChessServer.check_if_stake_is_possible(game_id) do
+          :ok ->
+
+
+            conn |> put_resp_content_type("application/json") |> send_resp(
+              200,
+              Jason.encode!(%{result: %{ success: true},  error_message: "Can place bet"})
+            )
+
+            _ ->
+
+              conn |> put_resp_content_type("application/json") |> send_resp(
+                400,
+                Jason.encode!(%{result: %{ success: false},  error_message: "Total 5 mins have passed since game started. Cannot Place bet anymore"})
+              )
+        end
+
+    end
+
+
+
   end
 
 

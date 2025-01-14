@@ -51,7 +51,7 @@ defmodule Quasar.ChessStateManager do
 
   def reset_game_status(%ChessState{} = chess_state) do
     new_status_map = Map.new(chess_state.player_ready_status , fn {key, _value} -> {key, "not-ready"} end)
-    %{chess_state | player_ready_status: new_status_map , time_left_for_white_player: 900, time_left_for_black_player: 900 , current_turn: "white" , status: "IN-PROGRESS"}
+    %{chess_state | player_ready_status: new_status_map , time_left_for_white_player: 900, time_left_for_black_player: 900 , current_turn: "white" , status: "GAME-OVER"}
   end
 
 
@@ -73,6 +73,10 @@ defmodule Quasar.ChessStateManager do
 
   def get_players_data(%ChessState{} = chess_state) do
     chess_state.turn_map
+  end
+
+  def set_state_to_game_over(%ChessState{} = chess_state) do
+    %{chess_state | status: "GAME-OVER"}
   end
 
 end

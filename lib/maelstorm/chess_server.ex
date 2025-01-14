@@ -63,6 +63,14 @@ defmodule MaelStorm.ChessServer do
       GenServer.call(via_tuple(game_id), {:get_players_data})
     end
 
+    def set_state_to_game_over(game_id) do
+        GenServer.call(via_tuple(game_id), {:set_state_to_game_over})
+    end
+
+    def check_if_stake_is_possible(game_id) do
+      GenServer.call(via_tuple(game_id), {:check_if_stake_is_possible})
+    end
+
 
     #Server Callbacks
 
@@ -133,6 +141,27 @@ defmodule MaelStorm.ChessServer do
       res = ChessStateManager.get_players_data(state)
       {:reply , res , state}
     end
+
+    def handle_call({:set_state_to_game_over} , _from , state) do
+      res = ChessStateManager.set_state_to_game_over(state)
+      {:noreply ,  res}
+    end
+
+    def handle_call({:check_if_stake_is_possible} , _from , state) do
+      case state.status do
+        "IN-PROGRESS" ->
+
+          total_time = 1800 - (res.time_left_for_black_player + res.time_left_for_white_player)
+
+          if total_time > 300 do
+            {:reply , :no , state}
+        else
+          {:reply , :ok , state}
+        end
+          _ -> {:reply , :no , state}
+      end
+    end
+
 
     def handle_call({:start_interval_update} , _from, state) do
 
