@@ -87,15 +87,10 @@ defmodule VortexPubSub.Cygnus.UserSocket do
     case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
       nil -> Logger.info("No Game found for user")
 
-      user_model_res ->
-
-        IO.inspect("USER MODEL FOUND IS")
-        IO.inspect(user_model_res)
-
-        {:ok , user_model} = Jason.encode(user_model_res)
+      user_model ->
 
         res = ChessServer.get_players_data(user_model["game_id"])
-        filtered_user = Enum.filter(res , fn user -> user.user_id != user_model["id"] end)
+        filtered_user = Enum.filter(res , fn user -> user.user_id != user_model["user_id"] end)
         won_user = Enum.at(filtered_user , 0)
 
         Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"] , user_id_who_won: won_user["user_id"] , user_username_who_won: won_user["username"]} )
@@ -107,13 +102,13 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
     end
 
-    res = Task.async(fn -> case UserMutation.set_user_online(user_id, false) do
+    res_offline = Task.async(fn -> case UserMutation.set_user_online(user_id, false) do
       {:ok , _} -> Logger.info("[SocketDisconnect] Changing User is_online status successful for user_id=#{user_id}")
 
       {:error, _} -> Logger.info("[SocketDisconnect] Changing User is_online status unsuccessful for user_id=#{user_id}")
     end
      end)
-    Task.await(res)
+    Task.await(res_offline)
   end
 
   defp monitor(pid , user_id) do
