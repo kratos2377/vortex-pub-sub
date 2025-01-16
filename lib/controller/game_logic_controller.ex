@@ -38,7 +38,7 @@ end
    case game_name do
        "chess" -> case GameMutation.create_new_game(conn) do
           {:ok , game_id} ->
-            case ChessSupervisor.start_game(game_id , user_id , username) do
+            case ChessSupervisor.start_game(game_id , user_id , username , game_type == "staked") do
               {:ok , _} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
 
               conn
@@ -720,19 +720,35 @@ end
 
 
         user_model -> case ChessServer.check_if_stake_is_possible(game_id) do
-          :ok ->
+          {:ok , session_id} ->
 
 
             conn |> put_resp_content_type("application/json") |> send_resp(
               200,
-              Jason.encode!(%{result: %{ success: true},  error_message: "Can place bet"})
+              Jason.encode!(%{result: %{ success: true},  session_id: session_id})
             )
+
+
+            :timeout ->
+
+              conn |> put_resp_content_type("application/json") |> send_resp(
+                400,
+                Jason.encode!(%{result: %{ success: false},  error_message: "Total 5 mins have passed since game started. Cannot Place bet anymore"})
+              )
+
+            :notstaked ->
+              conn |> put_resp_content_type("application/json") |> send_resp(
+                400,
+                Jason.encode!(%{result: %{ success: false},  error_message: "Game is of not staked type"})
+              )
+
+
 
             _ ->
 
               conn |> put_resp_content_type("application/json") |> send_resp(
                 400,
-                Jason.encode!(%{result: %{ success: false},  error_message: "Total 5 mins have passed since game started. Cannot Place bet anymore"})
+                Jason.encode!(%{result: %{ success: false},  error_message: "Game is not IN-PROGRESS yet"})
               )
         end
 
@@ -757,19 +773,34 @@ end
 
 
         user_model -> case ChessServer.check_if_stake_is_possible(game_id) do
-          :ok ->
+          {:ok , session_id}->
 
 
             conn |> put_resp_content_type("application/json") |> send_resp(
               200,
-              Jason.encode!(%{result: %{ success: true},  error_message: "Can place bet"})
+              Jason.encode!(%{result: %{ success: true},  session_id: session_id})
             )
+
+            :timeout ->
+
+              conn |> put_resp_content_type("application/json") |> send_resp(
+                400,
+                Jason.encode!(%{result: %{ success: false},  error_message: "Total 5 mins have passed since game started. Cannot Place bet anymore"})
+              )
+
+            :notstaked ->
+              conn |> put_resp_content_type("application/json") |> send_resp(
+                400,
+                Jason.encode!(%{result: %{ success: false},  error_message: "Game is of not staked type"})
+              )
+
+
 
             _ ->
 
               conn |> put_resp_content_type("application/json") |> send_resp(
                 400,
-                Jason.encode!(%{result: %{ success: false},  error_message: "Total 5 mins have passed since game started. Cannot Place bet anymore"})
+                Jason.encode!(%{result: %{ success: false},  error_message: "Game is not IN-PROGRESS yet"})
               )
         end
 

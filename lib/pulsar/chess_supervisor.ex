@@ -14,8 +14,8 @@ defmodule Pulsar.ChessSupervisor do
 
 
 
-  def start_game(game_id , user_id, username) do
-    chess_init_state = ChessState.new(game_id , user_id , username)
+  def start_game(game_id , user_id, username , is_staked) do
+    chess_init_state = ChessState.new(game_id , user_id , username , is_staked)
     #Logger.info("For game_id='#{game_id}', chess_state_is='#{chess_init_state}'")
     IO.puts("Chess state is")
     IO.inspect(chess_init_state)
@@ -42,8 +42,8 @@ defmodule Pulsar.ChessSupervisor do
   end
 
 
-  def start_game_of_match_type(game_id , player1, player2) do
-    chess_init_state = ChessState.new_state_of_match_type(game_id , player1 , player2)
+  def start_game_of_match_type(game_id , player1, player2 , is_staked) do
+    chess_init_state = ChessState.new_state_of_match_type(game_id , player1 , player2 , is_staked)
     #Logger.info("For game_id='#{game_id}', chess_state_is='#{chess_init_state}'")
     IO.puts("Chess state is")
     IO.inspect(chess_init_state)

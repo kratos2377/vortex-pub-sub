@@ -154,9 +154,12 @@ defmodule MaelStorm.ChessServer do
           total_time = 1800 - (res.time_left_for_black_player + res.time_left_for_white_player)
 
           if total_time > 300 do
-            {:reply , :no , state}
+            {:reply , :timeout , state}
         else
-          {:reply , :ok , state}
+          case res.is_staked do
+            true -> {:reply , {:ok , res.session_id} , state}
+            _ -> {:reply , :notstaked , state}
+          end
         end
           _ -> {:reply , :no , state}
       end

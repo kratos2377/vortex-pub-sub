@@ -52,7 +52,7 @@ defmodule VortexPubSub.PublishMessages do
     case GameMutation.create_new_match_with_users(game_type , player1 , player2) do
     {:ok, game_id} -> Logger.info("Game Session created for ther users")
 
-    case ChessSupervisor.start_game_of_match_type(game_id , player1 , player2) do
+    case ChessSupervisor.start_game_of_match_type(game_id , player1 , player2 , game_type == "staked") do
       {:ok , _} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
 
       start_async_publishing(topic1 , %{index: 0 , opponent_details: player2 , game_id: game_id} , "match-found-details")

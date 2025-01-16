@@ -67,3 +67,8 @@ config :vortex_pub_sub, VortexPubSub.Endpoint,
 
 config :vortex_pub_sub,
 joken_signer_key: "new-jwt-secret-token"
+
+
+config :nanoid,
+  size: 21,
+  alphabet: "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
