@@ -71,6 +71,16 @@ defmodule MaelStorm.ChessServer do
       GenServer.call(via_tuple(game_id), {:check_if_stake_is_possible})
     end
 
+    def check_if_bettor_is_player(game_id , user_id) do
+      GenServer.call(via_tuple(game_id), {:check_if_bettor_is_player , user_id})
+    end
+
+
+    def update_player_stake(game_id , user_id) do
+      GenServer.call(via_tuple(game_id), {:update_player_stake , user_id})
+    end
+
+
 
     #Server Callbacks
 
@@ -145,6 +155,28 @@ defmodule MaelStorm.ChessServer do
     def handle_call({:set_state_to_game_over} , _from , state) do
       res = ChessStateManager.set_state_to_game_over(state)
       {:noreply ,  res}
+    end
+
+
+    def handle_call({:check_if_bettor_is_player , user_id} , _from , state) do
+
+      res = Map.has_key?(state.player_staked_status , String.to_atom(user_id))
+
+      if res do
+        {:reply , {:ok , state.session_id} , state}
+      else
+        {:reply , :no  , state}
+      end
+
+    end
+
+    def handle_call({:update_player_stake , user_id} , _from , state) do
+
+      res = ChessStateManager.update_player_staked_status(state , user_id , "staked")
+      {:reply , :ok ,  res}
+
+
+
     end
 
     def handle_call({:check_if_stake_is_possible} , _from , state) do

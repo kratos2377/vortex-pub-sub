@@ -705,56 +705,85 @@ end
   end
 
 
-  post "/stake_in_game" do
+  post "/publish_user_stake" do
     #Use this to publish kafka event to update and send socket events
-    %{"user_who_is_betting" => user_who_is_betting , "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} = conn.body_params
+    %{"user_username_who_is_betting" => user_username_who_is_betting,  "user_who_is_betting" => user_who_is_betting , "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id} = conn.body_params
 
 
-    case Mongo.find_one(:mongo , "users", %{user_id: user_betting_on, game_id: game_id }) do
+    # This API should generate stake events for channels and Kafka event for cerotis and return 201
 
-        nil ->
-          conn |> put_resp_content_type("application/json") |> send_resp(
-            400,
-            Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game or Player. Cannot Place Bet"})
-          )
+    user_bet_event = %{
+      user_id_who_is_betting: user_who_is_betting,
+      user_id: user_id,
+      game_id: game_id,
+      bet_type: bet_type ,
+      amount: amount,
+      session_id: session_id
+    }
 
 
-        user_model -> case ChessServer.check_if_stake_is_possible(game_id) do
-          {:ok , session_id} ->
+    Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "user-game-bet-event",   %{"user_username_who_is_betting" => user_username_who_is_betting,  "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
+    Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "user-game-bet-event",  %{"user_username_who_is_betting" => user_username_who_is_betting,  "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
 
+    KafkaProducer.send_message(Constants.kafka_user_game_bet_topic(),  user_bet_event, "game-bet")
+
+
+    conn |> put_resp_content_type("application/json") |> send_resp(
+      201,
+      Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
+    )
+
+
+
+
+  end
+
+
+  post "/update_player_stake" do
+
+
+    %{"username" => username ,"user_id" => user_id ,  "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id} = conn.body_params
+
+
+    case ChessServer.update_player_stake(game_id , user_id) do
+
+
+
+
+        :ok ->
+
+          #Generate event for game and spectate channel
+          # Generate Kafka Event for Cerotis MS
+
+          user_bet_event = %{
+            user_id_who_is_betting: user_id,
+            user_id: user_id,
+            game_id: game_id,
+            bet_type: bet_type ,
+            amount: amount,
+            session_id: session_id
+          }
+
+          Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "user-game-bet-event",   %{"username" => username,  "user_id" => user_id , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
+          Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "user-game-bet-event",  %{"username" => username,  "user_id" => user_id , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
+
+          KafkaProducer.send_message(Constants.kafka_user_game_bet_topic(),  user_bet_event, "game-bet")
 
             conn |> put_resp_content_type("application/json") |> send_resp(
               200,
-              Jason.encode!(%{result: %{ success: true},  session_id: session_id})
+              Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
             )
 
 
-            :timeout ->
-
-              conn |> put_resp_content_type("application/json") |> send_resp(
-                400,
-                Jason.encode!(%{result: %{ success: false},  error_message: "Total 5 mins have passed since game started. Cannot Place bet anymore"})
-              )
-
-            :notstaked ->
-              conn |> put_resp_content_type("application/json") |> send_resp(
-                400,
-                Jason.encode!(%{result: %{ success: false},  error_message: "Game is of not staked type"})
-              )
 
 
-
-            _ ->
-
-              conn |> put_resp_content_type("application/json") |> send_resp(
-                400,
-                Jason.encode!(%{result: %{ success: false},  error_message: "Game is not IN-PROGRESS yet"})
-              )
-        end
+        _ ->
+          conn |> put_resp_content_type("application/json") |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: "Error While Placing User Bet"})
+          )
 
     end
-
-
 
   end
 
@@ -763,7 +792,18 @@ end
     %{"user_who_is_betting" => user_who_is_betting , "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type} = conn.body_params
 
 
-    case Mongo.find_one(:mongo , "users", %{user_id: user_betting_on, game_id: game_id }) do
+    case ChessServer.check_if_bettor_is_player( game_id , user_who_is_betting) do
+
+    {:ok , session_id} ->
+
+      conn |> put_resp_content_type("application/json") |> send_resp(
+        200,
+        Jason.encode!(%{result: %{ success: true},  session_id: session_id})
+      )
+
+    :no ->
+
+      case Mongo.find_one(:mongo , "users", %{user_id: user_betting_on, game_id: game_id }) do
 
         nil ->
           conn |> put_resp_content_type("application/json") |> send_resp(
@@ -805,6 +845,11 @@ end
         end
 
     end
+
+    end
+
+
+
 
 
 

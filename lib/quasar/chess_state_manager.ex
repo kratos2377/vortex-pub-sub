@@ -18,7 +18,8 @@ defmodule Quasar.ChessStateManager do
 
     sorted_players = Enum.sort(updated_players , &(&1.count_id <= &2.count_id))
     status_map = Map.put(chess_state.player_ready_status , String.to_atom(user_id) , "not-ready")
-     %{chess_state | turn_map: sorted_players, total_players: Enum.sum([chess_state.total_players , 1]), player_count_index: new_count_id, player_ready_status: status_map}
+    staked_map = Map.put(chess_state.player_staked_status , String.to_atom(user_id) , "not-staked")
+     %{chess_state | turn_map: sorted_players, total_players: Enum.sum([chess_state.total_players , 1]), player_count_index: new_count_id, player_ready_status: status_map, player_staked_status: staked_map}
   end
 
   def remove_player(%ChessState{} = chess_state, user_id) do
@@ -27,8 +28,9 @@ defmodule Quasar.ChessStateManager do
         {:error, :player_not_found}
       _ ->
         {_ , status_map} = Map.pop(chess_state.player_ready_status , user_id)
+        {_ , staked_map} = Map.pop(chess_state.player_staked_status , user_id)
         updated_players = Enum.reject(chess_state.turn_map, &(&1.user_id == user_id))
-       %{chess_state | turn_map: updated_players , total_players: Enum.sum([chess_state.total_players, -1]), player_ready_status: status_map}
+       %{chess_state | turn_map: updated_players , total_players: Enum.sum([chess_state.total_players, -1]), player_ready_status: status_map, player_staked_status: staked_map}
     end
   end
 
@@ -39,19 +41,43 @@ defmodule Quasar.ChessStateManager do
     %{chess_state | player_ready_status: new_updated_player_status_map}
   end
 
+
+  def update_player_staked_status(%ChessState{} = chess_state, user_id , status) do
+    existing_map = chess_state.player_staked_status
+    new_updated_player_staked_map  = %{existing_map | "#{user_id}": status}
+
+    %{chess_state | player_staked_status: new_updated_player_staked_map}
+  end
+
   def check_game_start_status(%ChessState{} = chess_state) do
     has_not_ready = Enum.any?(chess_state.player_ready_status, fn {_key, value} -> value == "not-ready" end)
 
   if has_not_ready do
     chess_state
   else
-    %{chess_state |  time_left_for_white_player: 900, time_left_for_black_player: 900 , current_turn: "white" , status: "IN-PROGRESS"}
+    case chess_state.is_staked do
+      true ->
+
+        has_everyone_staked = Enum.any?(chess_state.player_staked_status, fn {_key, value} -> value == "not-staked" end)
+
+        if has_everyone_staked do
+          chess_state
+        else
+
+        %{chess_state |  time_left_for_white_player: 900, time_left_for_black_player: 900 , current_turn: "white" , status: "IN-PROGRESS"}
+
+        end
+
+
+        _ -> %{chess_state |  time_left_for_white_player: 900, time_left_for_black_player: 900 , current_turn: "white" , status: "IN-PROGRESS"}
+    end
   end
   end
 
   def reset_game_status(%ChessState{} = chess_state) do
     new_status_map = Map.new(chess_state.player_ready_status , fn {key, _value} -> {key, "not-ready"} end)
-    %{chess_state | player_ready_status: new_status_map , time_left_for_white_player: 900, time_left_for_black_player: 900 , current_turn: "white" , status: "GAME-OVER" , session_id: Nanoid.generate()}
+    new_staked_map = Map.new(chess_state.player_staked_status , fn {key, _value} -> {key, "not-staked"} end)
+    %{chess_state | player_ready_status: new_status_map , time_left_for_white_player: 900, time_left_for_black_player: 900 , current_turn: "white" , status: "GAME-OVER" , session_id: Nanoid.generate() , player_staked_status: staked_map}
   end
 
 
@@ -78,5 +104,6 @@ defmodule Quasar.ChessStateManager do
   def set_state_to_game_over(%ChessState{} = chess_state) do
     %{chess_state | status: "GAME-OVER"}
   end
+
 
 end

@@ -108,6 +108,9 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     # Reset Game Status for replay
     ChessServer.reset_game_state(game_id)
 
+    KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: winner_user_id , game_id: game_id , score: 20})
+    KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: loser_user_id , game_id: game_id , score: -10})
+
    {:noreply,socket}
   end
 
