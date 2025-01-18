@@ -10,14 +10,6 @@ defmodule VortexPubSub.Cygnus.UserSocket do
   alias VortexPubSub.KafkaProducer
   use Joken.Config
 
-
-  defimpl Jason.Encoder, for: BSON.ObjectId do
-    def encode(val, _opts \\ []) do
-      BSON.ObjectId.encode!(val)
-      |> Jason.encode!()
-    end
-  end
-
   defoverridable init: 1
 
   channel "game:chess:*", VortexPubSub.Cygnus.ChessGameChannel

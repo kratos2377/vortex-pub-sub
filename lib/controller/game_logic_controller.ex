@@ -681,11 +681,11 @@ end
 
                     _ ->
 
-                      Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{} )
+                      Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
                       Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
                  end
                   "error" ->
-                    Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{} )
+                    Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
                     Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
           end
 
@@ -715,7 +715,7 @@ end
 
     user_bet_event = %{
       user_id_who_is_betting: user_who_is_betting,
-      user_id: user_id,
+      user_id: user_betting_on,
       game_id: game_id,
       bet_type: bet_type ,
       amount: amount,
@@ -804,7 +804,7 @@ end
         IO.inspect("Recieved game bet model for user")
         IO.inspect(game_bet_model)
 
-        if game_bet_model.user_id_betting_on == ^user_id_betting_on do
+        if game_bet_model.user_id_betting_on == user_id_betting_on do
 
           conn |> put_resp_content_type("application/json") |> send_resp(
         200,

@@ -168,7 +168,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   def handle_out("replay-false-event-user", payload, socket) do
     broadcast!(socket, "replay-false-event", payload )
 
-    ChessSupervisor.stop_game(game_id)
+    ChessSupervisor.stop_game(payload.game_id)
 
     {:noreply,socket}
   end

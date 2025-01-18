@@ -183,13 +183,13 @@ defmodule MaelStorm.ChessServer do
       case state.status do
         "IN-PROGRESS" ->
 
-          total_time = 1800 - (res.time_left_for_black_player + res.time_left_for_white_player)
+          total_time = 1800 - (state.time_left_for_black_player + state.time_left_for_white_player)
 
           if total_time > 300 do
             {:reply , :timeout , state}
         else
-          case res.is_staked do
-            true -> {:reply , {:ok , res.session_id} , state}
+          case state.is_staked do
+            true -> {:reply , {:ok , state.session_id} , state}
             _ -> {:reply , :notstaked , state}
           end
         end
