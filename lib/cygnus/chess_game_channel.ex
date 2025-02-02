@@ -103,7 +103,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   "loser_username" => loser_username , "loser_user_id" => loser_user_id , "game_id" => game_id} , socket) do
     broadcast!(socket, "game-over", %{color_in_check_mate: color_in_check_mate  , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id} )
 
-    ChessServer.set_state_to_game_over(game_id)
+    ChessServer.set_state_to_game_over(game_id , true , winner_user_id , game_id)
     Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "game-over",   %{color_in_check_mate: color_in_check_mate , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id , game_id: game_id} )
 
     # Reset Game Status for replay

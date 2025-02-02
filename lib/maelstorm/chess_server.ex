@@ -4,6 +4,8 @@ defmodule MaelStorm.ChessServer do
     alias Quasar.ChessStateManager
     alias GameState.ChessState
     alias VortexPubSub.Endpoint
+    alias VortexPubSub.Constants
+    alias VortexPubSub.KafkaProducer
 
 
     def start_link(%ChessState{} = chess_state) do
@@ -63,8 +65,8 @@ defmodule MaelStorm.ChessServer do
       GenServer.call(via_tuple(game_id), {:get_players_data})
     end
 
-    def set_state_to_game_over(game_id) do
-        GenServer.call(via_tuple(game_id), {:set_state_to_game_over})
+    def set_state_to_game_over(game_id , is_valid , winner_id , game_id) do
+        GenServer.call(via_tuple(game_id), {:set_state_to_game_over , is_valid , winner_id , game_id})
     end
 
     def check_if_stake_is_possible(game_id) do
@@ -161,8 +163,11 @@ defmodule MaelStorm.ChessServer do
       {:reply , res , state}
     end
 
-    def handle_call({:set_state_to_game_over} , _from , state) do
+    def handle_call({:set_state_to_game_over , is_valid , winner_id , game_id} , _from , state) do
       res = ChessStateManager.set_state_to_game_over(state)
+      if res.is_staked do
+          KafkaProducer.send_message(Constants.kafka_user_game_over_topic() , %{game_id: game_id , session_id: res.session_id , winner_id: winner_id , is_game_valid: is_valid} , "game-over-event")
+      end
       {:noreply ,  res}
     end
 
