@@ -248,7 +248,13 @@ end
             Jason.encode!(%{result: %{ success: true}})
           )
 
-            _ -> conn
+            _ ->
+              ChessSupervisor.stop_game(game_id)
+
+           KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+
+
+              conn
             |> put_resp_content_type("application/json")
             |> send_resp(
               400,

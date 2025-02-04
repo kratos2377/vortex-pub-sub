@@ -65,7 +65,7 @@ defmodule MaelStorm.ChessServer do
       GenServer.call(via_tuple(game_id), {:get_players_data})
     end
 
-    def set_state_to_game_over(game_id , is_valid , winner_id , game_id) do
+    def set_state_to_game_over(game_id , is_valid , winner_id) do
         GenServer.call(via_tuple(game_id), {:set_state_to_game_over , is_valid , winner_id , game_id})
     end
 
@@ -332,7 +332,7 @@ defmodule MaelStorm.ChessServer do
 
     if state.is_staked do
 
-      if state.staking_player_time == 120 do
+      if state.staking_player_time == 122 do
         Endpoint.broadcast!("game:chess:"<> state.game_id , "player-staking-available" , %{})
         Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-staking-available" , %{})
 

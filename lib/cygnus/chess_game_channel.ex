@@ -20,7 +20,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   end
 
   intercept ["joined-room" , "start-the-replay-match" , "start-the-match" , "game-over-time" , "default-win-because-user-left", "user-left-event",
-  "replay-false-event-user", "player-staking-available" , "player-stake-complete", "user-game-bet-event"]
+  "replay-false-event-user", "player-staking-available" , "player-stake-complete", "user-game-bet-event" , "player-did-not-staked-within-time"]
   def handle_out("joined-room", payload, socket) do
     #Add logic to prevent user from joining if the game is in progress
     broadcast!(socket, "new-user-joined", %{user_id: payload.user_id, username: payload.username, game_id: payload.game_id})
@@ -103,7 +103,7 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   "loser_username" => loser_username , "loser_user_id" => loser_user_id , "game_id" => game_id} , socket) do
     broadcast!(socket, "game-over", %{color_in_check_mate: color_in_check_mate  , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id} )
 
-    ChessServer.set_state_to_game_over(game_id , true , winner_user_id , game_id)
+    ChessServer.set_state_to_game_over(game_id , true , winner_user_id)
     Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "game-over",   %{color_in_check_mate: color_in_check_mate , winner_username:  winner_username, winner_user_id: winner_user_id, loser_username: loser_username, loser_user_id: loser_user_id , game_id: game_id} )
 
     # Reset Game Status for replay
@@ -189,6 +189,11 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
   def handle_out("user-game-bet-event" , payload , socket) do
     broadcast!(socket, "user-game-bet-event-user", payload )
+    {:noreply,socket}
+  end
+
+  def handle_out("player-did-not-staked-within-time" , payload , socket) do
+    broadcast!(socket, "player-did-not-staked-within-time-user", payload )
     {:noreply,socket}
   end
 

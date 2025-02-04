@@ -36,7 +36,7 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
 
   intercept ["new-user-joined" ,"start-game-for-all" ,  "remove-all-users" , "user-left-room" , "user-status-update" , "game-event" ,
   "verifying-game" , "game-over", "start-the-replay-match" , "replay-false-event" , "replay-accepted-by-user" , "start-the-match",
-  "game-over-time", "default-win-because-user-left", "user-left-event" , "user-game-bet-event"]
+  "game-over-time", "default-win-because-user-left", "user-left-event" , "player-staking-available" , "player-stake-complete", "user-game-bet-event" , "player-did-not-staked-within-time"]
 
   def handle_out("new-user-joined" , payload , socket) do
     broadcast!(socket , Constants.kafka_user_joined_event_key() , payload)
@@ -124,5 +124,23 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
     {:noreply , socket}
   end
 
+
+  def handle_out("player-staking-available" , payload , socket) do
+    broadcast!(socket, "player-staking-available-spectator", payload )
+    {:noreply,socket}
+  end
+
+
+
+  def handle_out("player-stake-complete" , payload , socket) do
+    broadcast!(socket, "player-stake-complete-spectator", payload )
+    {:noreply,socket}
+  end
+
+
+  def handle_out("player-did-not-staked-within-time" , payload , socket) do
+    broadcast!(socket, "player-did-not-staked-within-time-spectator", payload )
+    {:noreply,socket}
+  end
 
 end
