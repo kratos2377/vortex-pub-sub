@@ -725,7 +725,8 @@ end
       game_id: game_id,
       bet_type: bet_type ,
       amount: amount,
-      session_id: session_id
+      session_id: session_id,
+      event_type: "CREATE"
     }
 
 
@@ -749,7 +750,7 @@ end
   post "/update_player_stake" do
 
 
-    %{"username" => username ,"user_id" => user_id ,  "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id} = conn.body_params
+    %{"username" => username ,"user_id" => user_id ,  "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id , "event_type"=> event_type} = conn.body_params
 
 
     case ChessServer.update_player_stake(game_id , user_id) do
@@ -768,7 +769,8 @@ end
             game_id: game_id,
             bet_type: bet_type ,
             amount: amount,
-            session_id: session_id
+            session_id: session_id,
+            event_type: event_type
           }
 
           Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "user-game-bet-event",   %{"username" => username,  "user_id" => user_id , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
@@ -792,41 +794,6 @@ end
 
     end
 
-  end
-
-
-
-  get "/check_existing_user_bet" do
-    %{"game_id" => game_id , "user_id" => user_id , "session_id" => session_id , "user_id_betting_on" => user_id_betting_on} = conn.body_params
-
-
-    case GameBetQuery.get_game_bet_for_user(user_id , game_id , session_id) do
-      nil ->  conn |> put_resp_content_type("application/json") |> send_resp(
-        200,
-        Jason.encode!(%{result: %{ success: true},  message: "user eligible to bet"})
-      )
-
-      game_bet_model ->
-        IO.inspect("Recieved game bet model for user")
-        IO.inspect(game_bet_model)
-
-        if game_bet_model.user_id_betting_on == user_id_betting_on do
-
-          conn |> put_resp_content_type("application/json") |> send_resp(
-        200,
-        Jason.encode!(%{result: %{ success: true},  message: "user eligible to bet"})
-      )
-
-        else
-
-          conn |> put_resp_content_type("application/json") |> send_resp(
-        400,
-        Jason.encode!(%{result: %{ success: false},  error_message: "Cannot Bet on another player for this session"})
-      )
-
-        end
-
-    end
   end
 
 
@@ -857,11 +824,34 @@ end
         user_model -> case ChessServer.check_if_stake_is_possible(game_id) do
           {:ok , session_id}->
 
+            #can add redis support to fast up queries
+            case GameBetQuery.get_game_bet_for_user(user_id , game_id , session_id) do
+              nil ->  conn |> put_resp_content_type("application/json") |> send_resp(
+                200,
+                Jason.encode!(%{result: %{ success: true},  type: "CREATE" , session_id: session_id})
+              )
 
-            conn |> put_resp_content_type("application/json") |> send_resp(
-              200,
-              Jason.encode!(%{result: %{ success: true},  session_id: session_id})
-            )
+              game_bet_model ->
+                IO.inspect("Recieved game bet model for user")
+                IO.inspect(game_bet_model)
+
+                if game_bet_model.user_id_betting_on == user_id_betting_on do
+
+                  conn |> put_resp_content_type("application/json") |> send_resp(
+                200,
+                Jason.encode!(%{result: %{ success: true},  type: "UPDATE" , session_id: session_id})
+              )
+
+                else
+
+                  conn |> put_resp_content_type("application/json") |> send_resp(
+                400,
+                Jason.encode!(%{result: %{ success: false},  error_message: "Cannot Bet on another player for this session"})
+              )
+
+                end
+
+            end
 
             :timeout ->
 
