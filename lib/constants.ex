@@ -6,7 +6,7 @@ defmodule VortexPubSub.Constants do
   def kafka_user_game_events_topic, do: "user_game_events"
   def kafka_user_game_deletion_topic, do: "user_game_deletion"
   def kafka_user_score_update_topic, do: "user_score_update"
-  def kafka_user_game_bet_topic, do: "user_game_bet"
+  def kafka_create_user_bet_topic, do: "create_user_bet"
   def kafka_user_game_over_topic, do: "game_over_event"
 
 
