@@ -714,7 +714,8 @@ end
 
   post "/publish_user_stake" do
     #Use this to publish kafka event to update and send socket events
-    %{"user_username_who_is_betting" => user_username_who_is_betting,  "user_who_is_betting" => user_who_is_betting , "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id} = conn.body_params
+    %{"user_username_who_is_betting" => user_username_who_is_betting,  "user_who_is_betting" => user_who_is_betting , "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id,
+    "event_type"=> event_type} = conn.body_params
 
 
     # This API should generate stake events for channels and Kafka event for cerotis and return 201
@@ -726,7 +727,7 @@ end
       bet_type: bet_type ,
       amount: amount,
       session_id: session_id,
-      event_type: "CREATE"
+      event_type: event_type
     }
 
 
@@ -750,7 +751,7 @@ end
   post "/update_player_stake" do
 
 
-    %{"username" => username ,"user_id" => user_id ,  "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id , "event_type"=> event_type} = conn.body_params
+    %{"username" => username ,"user_id" => user_id ,  "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id } = conn.body_params
 
 
     case ChessServer.update_player_stake(game_id , user_id) do
@@ -770,7 +771,7 @@ end
             bet_type: bet_type ,
             amount: amount,
             session_id: session_id,
-            event_type: event_type
+            event_type: "CREATE"
           }
 
           Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "user-game-bet-event",   %{"username" => username,  "user_id" => user_id , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
@@ -825,7 +826,7 @@ end
           {:ok , session_id}->
 
             #can add redis support to fast up queries
-            case GameBetQuery.get_game_bet_for_user(user_id , game_id , session_id) do
+            case GameBetQuery.get_game_bet_for_user(user_who_is_betting , game_id , session_id) do
               nil ->  conn |> put_resp_content_type("application/json") |> send_resp(
                 200,
                 Jason.encode!(%{result: %{ success: true},  type: "CREATE" , session_id: session_id})
@@ -835,7 +836,7 @@ end
                 IO.inspect("Recieved game bet model for user")
                 IO.inspect(game_bet_model)
 
-                if game_bet_model.user_id_betting_on == user_id_betting_on do
+                if game_bet_model.user_id_betting_on == user_betting_on do
 
                   conn |> put_resp_content_type("application/json") |> send_resp(
                 200,
