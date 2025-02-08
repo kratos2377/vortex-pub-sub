@@ -6,7 +6,7 @@ defmodule MaelStorm.ChessServer do
     alias VortexPubSub.Endpoint
     alias VortexPubSub.Constants
     alias VortexPubSub.KafkaProducer
-
+    alias Pulsar.ChessSupervisor
 
     def start_link(%ChessState{} = chess_state) do
       GenServer.start_link(__MODULE__, {chess_state}, name: via_tuple(chess_state.game_id))
@@ -181,7 +181,7 @@ defmodule MaelStorm.ChessServer do
       if res.is_staked do
           KafkaProducer.send_message(Constants.kafka_user_game_over_topic() , %{game_id: game_id , session_id: res.session_id , winner_id: winner_id , is_game_valid: is_valid} , "game-over-event")
       end
-      {:noreply ,  res}
+      {:reply ,  res , res}
     end
 
 
@@ -289,14 +289,21 @@ defmodule MaelStorm.ChessServer do
           "white" ->
 
               white_player = Enum.at(state.turn_map , 0)
+              black_player = Enum.at(state.turn_map , 1)
               Endpoint.broadcast!("game:chess:"<> state.game_id , "game-over-time" , white_player)
               Endpoint.broadcast!("spectate:chess:"<> state.game_id , "game-over-time" , white_player)
 
-            "black" ->
+              MaelStorm.ChessServer.set_state_to_game_over(state.game_id , false , black_player.user_id)
+              ChessSupervisor.stop_game(state.game_id )
 
+            "black" ->
+              white_player = Enum.at(state.turn_map , 0)
               black_player = Enum.at(state.turn_map , 1)
               Endpoint.broadcast!("game:chess:"<> state.game_id , "game-over-time" , black_player)
               Endpoint.broadcast!("spectate:chess:"<> state.game_id , "game-over-time" , black_player)
+              MaelStorm.ChessServer.set_state_to_game_over(state.game_id , false , white_player.user_id)
+              ChessSupervisor.stop_game(state.game_id )
+
         end
 
     end

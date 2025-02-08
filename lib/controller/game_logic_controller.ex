@@ -734,7 +734,7 @@ end
     Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "user-game-bet-event",   %{"user_username_who_is_betting" => user_username_who_is_betting,  "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
     Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "user-game-bet-event",  %{"user_username_who_is_betting" => user_username_who_is_betting,  "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
 
-    KafkaProducer.send_message(Constants.kafka_user_game_bet_topic(),  user_bet_event, "game-bet")
+    KafkaProducer.send_message(Constants.kafka_create_user_bet_topic(),  user_bet_event, "game-bet")
 
 
     conn |> put_resp_content_type("application/json") |> send_resp(
@@ -751,7 +751,7 @@ end
   post "/update_player_stake" do
 
 
-    %{"username" => username ,"user_id" => user_id ,  "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id } = conn.body_params
+    %{"username" => username ,"user_id" => user_id ,  "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id , "wallet_key" => wallet_key} = conn.body_params
 
 
     case ChessServer.update_player_stake(game_id , user_id) do
@@ -771,16 +771,17 @@ end
             bet_type: bet_type ,
             amount: amount,
             session_id: session_id,
+            wallet_key: wallet_key,
             event_type: "CREATE"
           }
 
           Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "user-game-bet-event",   %{"username" => username,  "user_id" => user_id , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
           Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "user-game-bet-event",  %{"username" => username,  "user_id" => user_id , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
 
-          KafkaProducer.send_message(Constants.kafka_user_game_bet_topic(),  user_bet_event, "game-bet")
+          KafkaProducer.send_message(Constants.kafka_create_user_bet_topic(),  user_bet_event, "game-bet")
 
             conn |> put_resp_content_type("application/json") |> send_resp(
-              200,
+              201,
               Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
             )
 
@@ -884,7 +885,38 @@ end
   end
 
 
+  # Test APIS wont be used in production
+  post "/generate_game_over_event" do
 
+    %{"winner_id" => winner_id , "session_id" => session_id , "game_id" => game_id, "is_game_valid" => is_game_valid} = conn.body_params
+
+    KafkaProducer.send_message(Constants.kafka_user_game_over_topic() , %{game_id: game_id , session_id: session_id , winner_id: winner_id , is_game_valid: is_game_valid} , "game-over-event")
+
+
+
+    conn |> put_resp_content_type("application/json") |> send_resp(
+      201,
+      Jason.encode!(%{result: %{ success: true},  message: "Succesfully Published"})
+    )
+
+
+  end
+
+  post "/generate_game_bet_events" do
+
+    %{"winner_id" => winner_id , "session_id" => session_id , "game_id" => game_id, "is_game_valid" => is_game_valid} = conn.body_params
+
+    KafkaProducer.send_message("generate_game_bet_events" , %{game_id: game_id , session_id: session_id , winner_id: winner_id , is_game_valid: is_game_valid} , "game-over-event")
+
+
+
+    conn |> put_resp_content_type("application/json") |> send_resp(
+      201,
+      Jason.encode!(%{result: %{ success: true},  message: "Succesfully Published"})
+    )
+
+
+  end
 
 
 end
