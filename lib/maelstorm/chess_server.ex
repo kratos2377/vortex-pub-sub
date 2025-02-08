@@ -65,6 +65,10 @@ defmodule MaelStorm.ChessServer do
       GenServer.call(via_tuple(game_id), {:get_players_data})
     end
 
+    def get_game_data(game_id) do
+      GenServer.call(via_tuple(game_id), {:get_game_data})
+    end
+
     def set_state_to_game_over(game_id , is_valid , winner_id) do
         GenServer.call(via_tuple(game_id), {:set_state_to_game_over , is_valid , winner_id , game_id})
     end
@@ -84,7 +88,7 @@ defmodule MaelStorm.ChessServer do
 
 
     def stake_interval_check(game_id) do
-      GenServer.call(via_tuple(game_id), {:stake_interval_check , user_id})
+      GenServer.call(via_tuple(game_id), {:stake_interval_check})
     end
 
 
@@ -101,15 +105,24 @@ defmodule MaelStorm.ChessServer do
 
         res ->
           if res.total_players == 2 do
+            IO.puts("Total two player joined")
             start_stake_check_interval_update()
+            {:reply , res.player_count_index , res}
+
+          else
+
+              {:reply , res.player_count_index , res}
           end
 
-          {:reply , res.player_count_index , res}
       end
 
 
     end
 
+
+    def handle_call({:get_game_data}, _from, state) do
+      {:reply , state , state}
+    end
 
     def handle_call({:get_summary}, _from, state) do
         {:reply , state , state}
@@ -292,13 +305,14 @@ defmodule MaelStorm.ChessServer do
 
       if state.is_staked do
 
-        if state.staking_player_time == 120 do
+        if state.staking_player_time == 122 do
           Endpoint.broadcast!("game:chess:"<> state.game_id , "player-staking-available" , %{})
           Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-staking-available" , %{})
-
+         res =  ChessStateManager.update_staking_time(state)
           start_stake_check_interval_update()
+          {:noreply, res}
         else
-          has_everyone_staked = Enum.any?(chess_state.player_staked_status, fn {_key, value} -> value == "not-staked" end)
+          has_everyone_staked = Enum.any?(state.player_staked_status, fn {_key, value} -> value == "not-staked" end)
 
 
           if !has_everyone_staked do
@@ -306,16 +320,20 @@ defmodule MaelStorm.ChessServer do
             Endpoint.broadcast!("game:chess:"<> state.game_id , "player-stake-complete" , %{})
             Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-stake-complete" , %{})
 
+            {:noreply, state}
+
           else
 
-            if stake.staking_player_time == 0 do
+            if state.staking_player_time == 0 do
 
               Endpoint.broadcast!("game:chess:"<> state.game_id , "player-did-not-staked-within-time" , %{})
               Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-did-not-staked-within-time" , %{})
+              {:noreply, state}
 
             else
-
-            start_stake_check_interval_update()
+              res =  ChessStateManager.update_staking_time(state)
+              start_stake_check_interval_update()
+              {:noreply, res}
 
             end
 
@@ -335,28 +353,31 @@ defmodule MaelStorm.ChessServer do
       if state.staking_player_time == 122 do
         Endpoint.broadcast!("game:chess:"<> state.game_id , "player-staking-available" , %{})
         Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-staking-available" , %{})
+        res =  ChessStateManager.update_staking_time(state)
+          start_stake_check_interval_update()
+          {:noreply, res}
 
-        start_stake_check_interval_update()
       else
-        has_everyone_staked = Enum.any?(chess_state.player_staked_status, fn {_key, value} -> value == "not-staked" end)
+        has_everyone_staked = Enum.any?(state.player_staked_status, fn {_key, value} -> value == "not-staked" end)
 
 
         if !has_everyone_staked do
 
           Endpoint.broadcast!("game:chess:"<> state.game_id , "player-stake-complete" , %{})
           Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-stake-complete" , %{})
-
+          {:noreply, state}
         else
 
-          if stake.staking_player_time == 0 do
+          if state.staking_player_time == 0 do
 
             Endpoint.broadcast!("game:chess:"<> state.game_id , "player-did-not-staked-within-time" , %{})
             Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-did-not-staked-within-time" , %{})
-
+            {:noreply, state}
           else
 
-          start_stake_check_interval_update()
-
+            res =  ChessStateManager.update_staking_time(state)
+            start_stake_check_interval_update()
+            {:noreply, res}
           end
 
         end

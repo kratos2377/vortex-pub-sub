@@ -36,7 +36,7 @@ defmodule Quasar.ChessStateManager do
 
   def update_player_status(%ChessState{} = chess_state, user_id , status) do
     existing_map = chess_state.player_ready_status
-    new_updated_player_status_map  = %{existing_map | "#{user_id}": status}
+    new_updated_player_status_map  = Map.update(existing_map , String.to_atom(user_id) , "ready", fn _existing_value -> status end)
 
     %{chess_state | player_ready_status: new_updated_player_status_map}
   end
@@ -44,7 +44,8 @@ defmodule Quasar.ChessStateManager do
 
   def update_player_staked_status(%ChessState{} = chess_state, user_id , status) do
     existing_map = chess_state.player_staked_status
-    new_updated_player_staked_map  = %{existing_map | "#{user_id}": status}
+
+    new_updated_player_staked_map  =  Map.update(existing_map , String.to_atom(user_id) , "not-staked", fn _existing_value -> status end)
 
     %{chess_state | player_staked_status: new_updated_player_staked_map}
   end
