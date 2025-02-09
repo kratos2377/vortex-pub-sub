@@ -886,6 +886,34 @@ end
 
 
   # Test APIS wont be used in production
+  post "/generate_make_new_bet_event" do
+
+    %{"user_id" => user_id , "session_id" => session_id , "game_id" => game_id, "amount" => amount , "wallet_key" => wallet_key} = conn.body_params
+
+
+    user_bet_event = %{
+      user_id_who_is_betting: user_id,
+      user_id: user_id,
+      game_id: game_id,
+      bet_type: "win" ,
+      amount: amount,
+      session_id: session_id,
+      wallet_key: wallet_key,
+      event_type: "CREATE"
+    }
+
+    KafkaProducer.send_message(Constants.kafka_create_user_bet_topic() , user_bet_event, "game-bet-event")
+
+
+
+    conn |> put_resp_content_type("application/json") |> send_resp(
+      201,
+      Jason.encode!(%{result: %{ success: true},  message: "Succesfully Published"})
+    )
+
+
+  end
+
   post "/generate_game_over_event" do
 
     %{"winner_id" => winner_id , "session_id" => session_id , "game_id" => game_id, "is_game_valid" => is_game_valid} = conn.body_params
