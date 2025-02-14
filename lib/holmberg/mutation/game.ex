@@ -23,7 +23,7 @@ defmodule Holmberg.Mutation.Game do
         {:ok , _} -> case Mongo.insert_one(:mongo, "user_turns" , user_turn_mapping_changeset) do
           {:ok , _} -> case Redix.command(["SET", game_state_key, Constants.chess_starting_state()]) do
 
-            :ok -> {:ok , game_id}
+           { :ok , _ } -> {:ok , game_id}
 
             _ ->
               KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
@@ -71,7 +71,7 @@ defmodule Holmberg.Mutation.Game do
         {:ok , _} -> case Mongo.insert_one(:mongo, "user_turns" , user_turn_mapping_changeset) do
           {:ok , _} -> case Redix.command(["SET", game_state_key, Constants.chess_starting_state()]) do
 
-            :ok -> {:ok , game_id}
+           { :ok , _ } -> {:ok , game_id}
 
             _ ->
               KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())

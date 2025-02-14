@@ -13,6 +13,8 @@ defmodule VortexPubSub.GameLogicController do
   alias VortexPubSub.Constants
   alias JsonResult
   alias VortexPubSub.KafkaProducer
+  alias VortexPubSub.Utils.GenerateKeyNames
+
   plug(VortexPubSub.Hypernova.Cors)
 
   plug(Plug.Parsers,
@@ -538,13 +540,21 @@ end
 
   post "/get_game_details" do
     %{"game_id" => game_id} = conn.body_params
-
+    game_state_key = GenerateKeyNames.get_chess_state_key(game_id)
     case Mongo.find_one(:mongo, "games", %{id: game_id}) do
-      game_model -> conn |>  put_resp_content_type("application/json")
+      game_model -> case Redix.command(["GET" , game_state_key]) do
+        { :ok , state } ->
+          conn |>  put_resp_content_type("application/json")
       |> send_resp(
         200,
-        Jason.encode!(%{result: %{ success: true},  game: game_model})
+        Jason.encode!(%{result: %{ success: true},  game: game_model , chess_state: state })
       )
+          _ -> conn |>  put_resp_content_type("application/json")
+          |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: "Error while fetching game state from redis"})
+          )
+      end
       {:error , _} -> conn |>  put_resp_content_type("application/json")
       |> send_resp(
         400,
