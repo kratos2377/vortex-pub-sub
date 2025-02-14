@@ -15,6 +15,7 @@ defmodule VortexPubSub do
       worker(Mongo, [[name: :mongo, url: "mongodb://admin:adminpassword@localhost/user_game_events_db?authSource=admin", pool_size: 5]]),
      # {VortexPubSub.MongoRepo , []},
      VortexPubSub.PostgresRepo,
+     VortexPubSub.Redix,
       VortexPubSub.Endpoint,
 
       %{

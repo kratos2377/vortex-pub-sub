@@ -6,9 +6,13 @@ defmodule Holmberg.Mutation.Game do
   alias Holmberg.Schemas.UserTurnMapping
   alias Holmberg.Schemas.TurnModel
   alias VortexPubSub.Constants
+  alias VortexPubSub.Utils.GenerateKeyNames
+  alias VortexPubSub.KafkaProducer
+  alias VortexPubSub.Redix
 
   def create_new_game(conn) do
     game_id = Ecto.UUID.generate()
+    game_state_key = GenerateKeyNames.get_chess_state_key(game_id)
     params = conn.body_params
     game_changeset = create_game_changeset(game_id, params["user_id"], params["game_type"] , params["game_name"])
     user_game_relation_changeset = create_user_game_relation_changeset(game_id, params["user_id"], params["username"], "host")
@@ -17,24 +21,45 @@ defmodule Holmberg.Mutation.Game do
     case Mongo.insert_one(:mongo , "games", game_changeset) do
       {:ok, _} -> case Mongo.insert_one(:mongo, "users" , user_game_relation_changeset) do
         {:ok , _} -> case Mongo.insert_one(:mongo, "user_turns" , user_turn_mapping_changeset) do
-          {:ok , _} -> {:ok , game_id}
-          {:error, error_message} ->   {:error , error_message}
+          {:ok , _} -> case Redix.command(["SET", game_state_key, Constants.chess_starting_state()]) do
 
-          _ -> {:error, "Error Occured while Persisting User Turn Mapping Model"}
+            :ok -> {:ok , game_id}
+
+            _ ->
+              KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+              {:error, "Error Occured while adding chess state to redis"}
+          end
+          {:error, error_message} ->
+            KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+            {:error , error_message}
+
+          _ ->
+            KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+            {:error, "Error Occured while Persisting User Turn Mapping Model"}
         end
-        {:error, error_message} ->   {:error , error_message}
+        {:error, error_message} ->
+          KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+          {:error , error_message}
 
-        _ -> {:error, "Error Occured while Persisting User Model"}
+        _ ->
+          KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+          {:error, "Error Occured while Persisting User Model"}
       end
 
-      {:error, error_message} ->   {:error , error_message}
+      {:error, error_message} ->
+        KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+        {:error , error_message}
 
-      _ -> {:error, "Error Occured while Persisting Game Model"}
+      _ ->
+
+        KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+        {:error, "Error Occured while Persisting Game Model"}
     end
   end
 
   def create_new_match_with_users(game_type , player1 , player2) do
     game_id = Ecto.UUID.generate()
+    game_state_key = GenerateKeyNames.get_chess_state_key(game_id)
     #Only Chess is supported as of now
     game_changeset = create_match_game_changeset(game_id, game_type , "chess")
     match_user_changeset_first = create_user_match_relation_changeset(game_id, player1.user_id, player1.username)
@@ -42,22 +67,41 @@ defmodule Holmberg.Mutation.Game do
     user_turn_mapping_changeset = create_match_turns_mapping_changeset(game_id, player1 , player2)
 
     case Mongo.insert_one(:mongo , "games", game_changeset) do
-      {:ok, _} -> case Mongo.insert_many(:mongo, "users" , [match_user_changeset_first , match_user_changeset_second]) do
+      {:ok, _} ->  case Mongo.insert_many(:mongo, "users" , [match_user_changeset_first , match_user_changeset_second]) do
         {:ok , _} -> case Mongo.insert_one(:mongo, "user_turns" , user_turn_mapping_changeset) do
-          {:ok , _} -> {:ok , game_id}
-          :ok -> {:ok , game_id}
-          {:error, error_message} ->   {:error , error_message}
+          {:ok , _} -> case Redix.command(["SET", game_state_key, Constants.chess_starting_state()]) do
 
-          _ -> {:error, "Error Occured while Persisting User Turn Mapping Model"}
+            :ok -> {:ok , game_id}
+
+            _ ->
+              KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+              {:error, "Error Occured while adding chess state to redis"}
+          end
+          {:error, error_message} ->
+            KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+            {:error , error_message}
+
+          _ ->
+            KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+            {:error, "Error Occured while Persisting User Turn Mapping Model"}
         end
-        {:error, error_message} ->   {:error , error_message}
+        {:error, error_message} ->
+          KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+          {:error , error_message}
 
-        _ -> {:error, "Error Occured while Persisting User Model"}
+        _ ->
+          KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+          {:error, "Error Occured while Persisting User Model"}
       end
 
-      {:error, error_message} ->   {:error , error_message}
+      {:error, error_message} ->
+        KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+        {:error , error_message}
 
-      _ -> {:error, "Error Occured while Persisting Game Model"}
+      _ ->
+
+        KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+        {:error, "Error Occured while Persisting Game Model"}
     end
   end
 

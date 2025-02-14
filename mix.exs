@@ -41,7 +41,8 @@ defmodule VortexPubSub.MixProject do
       {:httpoison, "~> 2.2"},
       {:joken, "~> 2.6"},
       {:brod, "~> 4.3"},
-      {:nanoid, "~> 2.1"}
+      {:nanoid, "~> 2.1"},
+      {:redix, "~> 1.5"}
     ]
   end
 

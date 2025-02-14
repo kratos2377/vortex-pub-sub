@@ -35,4 +35,8 @@ defmodule VortexPubSub.Constants do
   def error_while_joining_lobby, do: "Error while joining lobby."
   def error_while_destroying_lobby, do: "Error while destroying lobby"
   def all_players_not_ready, do: "All Players not ready"
+
+
+  #chess starting state
+  def chess_starting_state, do: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 end
