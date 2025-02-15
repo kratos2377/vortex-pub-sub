@@ -737,7 +737,8 @@ end
       bet_type: bet_type ,
       amount: amount,
       session_id: session_id,
-      event_type: event_type
+      event_type: event_type,
+      is_player: false
     }
 
 
@@ -757,7 +758,7 @@ end
 
   end
 
-
+  # This is used for player stake only. Since player can stake only once the event_type will always be create
   post "/update_player_stake" do
 
 
@@ -782,7 +783,8 @@ end
             amount: amount,
             session_id: session_id,
             wallet_key: wallet_key,
-            event_type: "CREATE"
+            event_type: "CREATE",
+            is_player: true
           }
 
           Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "user-game-bet-event",   %{"username" => username,  "user_id" => user_id , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount} )
@@ -909,7 +911,8 @@ end
       amount: amount,
       session_id: session_id,
       wallet_key: wallet_key,
-      event_type: "CREATE"
+      event_type: "CREATE",
+      is_player: true
     }
 
     KafkaProducer.send_message(Constants.kafka_create_user_bet_topic() , user_bet_event, "game-bet-event")
