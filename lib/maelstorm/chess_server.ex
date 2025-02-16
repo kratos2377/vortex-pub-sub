@@ -106,8 +106,17 @@ defmodule MaelStorm.ChessServer do
         res ->
           if res.total_players == 2 do
             IO.puts("Total two player joined")
+
+            if res.is_staked do
+
             start_stake_check_interval_update()
             {:reply , res.player_count_index , res}
+
+            else
+              {:reply , res.player_count_index , res}
+            end
+
+
 
           else
 
@@ -208,6 +217,8 @@ defmodule MaelStorm.ChessServer do
     def handle_call({:update_player_stake , user_id} , _from , state) do
 
       res = ChessStateManager.update_player_staked_status(state , user_id , "staked")
+      IO.puts("After staking new map is")
+      IO.inspect(res)
       {:reply , :ok ,  res}
 
 

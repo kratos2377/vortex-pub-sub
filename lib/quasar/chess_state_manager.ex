@@ -45,7 +45,7 @@ defmodule Quasar.ChessStateManager do
   def update_player_staked_status(%ChessState{} = chess_state, user_id , status) do
     existing_map = chess_state.player_staked_status
 
-    new_updated_player_staked_map  =  Map.update(existing_map , String.to_atom(user_id) , "not-staked", fn _existing_value -> status end)
+    new_updated_player_staked_map  =  Map.update(existing_map , String.to_atom(user_id) , "staked", fn _existing_value -> status end)
 
     %{chess_state | player_staked_status: new_updated_player_staked_map}
   end
@@ -54,6 +54,7 @@ defmodule Quasar.ChessStateManager do
     has_not_ready = Enum.any?(chess_state.player_ready_status, fn {_key, value} -> value == "not-ready" end)
 
   if has_not_ready do
+    IO.puts("NOT ALL PLAYERS READY")
     chess_state
   else
     case chess_state.is_staked do
@@ -62,6 +63,7 @@ defmodule Quasar.ChessStateManager do
         has_everyone_staked = Enum.any?(chess_state.player_staked_status, fn {_key, value} -> value == "not-staked" end)
 
         if has_everyone_staked do
+          IO.puts("NOT ALL PLAYERS STAKED")
           chess_state
         else
 
