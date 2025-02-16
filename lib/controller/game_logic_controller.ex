@@ -682,7 +682,9 @@ end
                    {:ok, _} ->
 
 
-
+                    if res.is_staked do
+                      KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: res.game_id ,session_id: res.session_id} , "create_new_game_record")
+                    end
                     KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id}, Constants.kafka_game_general_event_key())
 
                     conn
@@ -699,10 +701,14 @@ end
 
                       Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
                       Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+                      KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                      ChessSupervisor.stop_game(game_id)
                  end
                   "error" ->
                     Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
                     Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+                    KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                    ChessSupervisor.stop_game(game_id)
           end
 
 

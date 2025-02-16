@@ -1,5 +1,6 @@
 defmodule VortexPubSub.PublishMessages do
   use VortexPubSubWeb, :channel
+  alias VortexPubSub.KafkaProducer
   alias VortexPubSub.Endpoint
   alias VortexPubSub.Constants
   alias Pulsar.ChessSupervisor
@@ -53,7 +54,7 @@ defmodule VortexPubSub.PublishMessages do
     {:ok, game_id} -> Logger.info("Game Session created for ther users")
 
     case ChessSupervisor.start_game_of_match_type(game_id , player1 , player2 , game_type == "staked") do
-      {:ok , _} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
+      {:ok , _ , session_id} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
 
 
       start_async_publishing(topic1 , %{index: 0 , opponent_details: player2 , game_id: game_id} , "match-found-details")
@@ -61,6 +62,8 @@ defmodule VortexPubSub.PublishMessages do
 
 
       if game_type == "staked" do
+        KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: game_id , session_id: session_id} ,
+        "new_game_record")
         ChessServer.stake_interval_check(game_id)
       end
 

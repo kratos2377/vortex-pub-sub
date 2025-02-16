@@ -45,8 +45,7 @@ defmodule Pulsar.ChessSupervisor do
   def start_game_of_match_type(game_id , player1, player2 , is_staked) do
     chess_init_state = ChessState.new_state_of_match_type(game_id , player1 , player2 , is_staked)
     #Logger.info("For game_id='#{game_id}', chess_state_is='#{chess_init_state}'")
-    IO.puts("Chess state is")
-    IO.inspect(chess_init_state)
+
     child_spec = %{
       id: ChessServer,
       start: {ChessServer, :start_link, [chess_init_state]},
@@ -55,14 +54,14 @@ defmodule Pulsar.ChessSupervisor do
     case DynamicSupervisor.start_child(__MODULE__, child_spec) do
       {:ok , chess_game_pid} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
         IO.inspect(chess_game_pid)
-        {:ok ,chess_game_pid }
+        {:ok ,chess_game_pid , chess_init_state.session_id }
       {:error , message} ->
         Logger.info("Error while spawning ChessProcess for '#{game_id}'. Error is as follows")
         IO.inspect(message)
           {:error , "some error occurred while spawning child"}
       {:ok , chess_game_pid , _ } ->
          Logger.info("Spawned Chess game server process named '#{game_id}' with pid '#{chess_game_pid}' with additional info.")
-         {:ok ,chess_game_pid }
+         {:ok ,chess_game_pid , chess_init_state.session_id }
       :ignore ->
         Logger.info("No child added to PID for some reason")
         {:error , "child ignored"}
