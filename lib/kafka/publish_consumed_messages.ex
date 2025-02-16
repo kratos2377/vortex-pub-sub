@@ -55,12 +55,14 @@ defmodule VortexPubSub.PublishMessages do
     case ChessSupervisor.start_game_of_match_type(game_id , player1 , player2 , game_type == "staked") do
       {:ok , _} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
 
-      if game_type == "staked" do
-        ChessServer.stake_interval_check(game_id)
-      end
 
       start_async_publishing(topic1 , %{index: 0 , opponent_details: player2 , game_id: game_id} , "match-found-details")
       start_async_publishing(topic2 , %{index: 1 , opponent_details: player1 , game_id: game_id} , "match-found-details")
+
+
+      if game_type == "staked" do
+        ChessServer.stake_interval_check(game_id)
+      end
 
 
       {:error , message} -> Logger.info("Error while spawning ChessProcess for '#{game_id}'. with some error '#{message}'")
