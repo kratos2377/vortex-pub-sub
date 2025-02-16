@@ -8,6 +8,7 @@ defmodule VortexPubSub.Constants do
   def kafka_user_score_update_topic, do: "user_score_update"
   def kafka_create_user_bet_topic, do: "create_user_bet"
   def kafka_user_game_over_topic, do: "game_over_event"
+  def kafka_stake_time_over, do: "stake_time_over"
 
 
   #Kafka Key Constants

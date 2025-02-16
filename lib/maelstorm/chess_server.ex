@@ -150,6 +150,11 @@ defmodule MaelStorm.ChessServer do
         "LOBBY" -> {:reply , "error" , state}
           "IN-PROGRESS" ->
             schedule_interval_update()
+
+            if state.is_staked do
+              start_stake_interval_timer()
+            end
+
             {:reply , "success" , res}
             _ -> {:reply , "error" , state}
       end
@@ -312,7 +317,7 @@ defmodule MaelStorm.ChessServer do
 
       if state.is_staked do
 
-        if state.staking_player_time == 122 do
+        if state.staking_player_time == 182 do
           Endpoint.broadcast!("game:chess:"<> state.game_id , "player-staking-available" , %{})
           Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-staking-available" , %{})
          res =  ChessStateManager.update_staking_time(state)
@@ -357,7 +362,7 @@ defmodule MaelStorm.ChessServer do
 
     if state.is_staked do
 
-      if state.staking_player_time == 122 do
+      if state.staking_player_time == 182 do
         Endpoint.broadcast!("game:chess:"<> state.game_id , "player-staking-available" , %{})
         Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-staking-available" , %{})
         res =  ChessStateManager.update_staking_time(state)
@@ -390,14 +395,50 @@ defmodule MaelStorm.ChessServer do
         end
 
       end
-
-
-
-
-
     end
 
   end
+
+
+
+  def handle_call({:stake_interval_timer} , _from, state) do
+
+    if state.is_staked do
+      total_time = 1800 - (state.time_left_for_black_player + state.time_left_for_white_player)
+
+      if total_time > 300 do
+          KafkaProducer.send_message(Constants.kafka_stake_time_over() , %{game_id: state.game_id , session_id: state.session_id} , "stake_time_over")
+      else
+        start_stake_interval_timer()
+      end
+
+      {:noreply, state}
+
+    else
+      {:noreply, state}
+    end
+
+ end
+
+
+def handle_info(:stake_interval_timer, state) do
+
+  if state.is_staked do
+    total_time = 1800 - (state.time_left_for_black_player + state.time_left_for_white_player)
+
+    if total_time > 300 do
+        KafkaProducer.send_message(Constants.kafka_stake_time_over() , %{game_id: state.game_id , session_id: state.session_id} , "stake_time_over")
+    else
+      start_stake_interval_timer()
+    end
+
+    {:noreply, state}
+
+  else
+    {:noreply, state}
+  end
+
+end
 
     def schedule_interval_update() do
       Process.send_after(self(), :start_interval_update, 1_000)
@@ -407,6 +448,11 @@ defmodule MaelStorm.ChessServer do
     def start_stake_check_interval_update() do
       Process.send_after(self(), :stake_interval_check, 1_000)
     end
+
+    def start_stake_interval_timer() do
+      Process.send_after(self(), :stake_interval_timer, 1_000)
+    end
+
 
 
     def terminate(reason, _game) do
