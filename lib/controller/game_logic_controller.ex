@@ -689,10 +689,6 @@ end
               "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
                 {:ok, _} ->
 
-
-                 if res.is_staked do
-                   KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: res.game_id ,session_id: res.session_id} , "create_new_game_record")
-                 end
                  KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id}, Constants.kafka_game_general_event_key())
 
                  conn
@@ -821,7 +817,7 @@ end
               "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
                 {:ok, _} ->
 
-                 KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: res.game_id ,session_id: res.session_id} , "create_new_game_record")
+
                  KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id}, Constants.kafka_game_general_event_key())
 
                  conn

@@ -165,9 +165,11 @@ defmodule MaelStorm.ChessServer do
             if state.is_staked do
               KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: state.game_id , session_id: state.session_id} , "new_game_record")
               start_stake_interval_timer()
+              {:reply , "success" , res}
+            else
+              {:reply , "success" , res}
             end
 
-            {:reply , "success" , res}
             _ -> {:reply , "error" , state}
       end
     end
