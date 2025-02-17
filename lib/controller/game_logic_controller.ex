@@ -811,7 +811,7 @@ end
 
           has_everyone_staked = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-staked" end)
 
-          if !has_everyone_staked do
+          if !has_everyone_staked and is_replay do
 
             Endpoint.broadcast!("game:chess:"<> game_id , "player-stake-complete" , %{})
             Endpoint.broadcast!("spectate:chess:"<> game_id , "player-stake-complete" , %{})
