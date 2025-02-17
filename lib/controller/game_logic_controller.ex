@@ -677,38 +677,47 @@ end
 
         if !has_not_ready do
 
-          case ChessServer.start_game(game_id) do
-                 "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
-                   {:ok, _} ->
+          if res.is_staked do
+            ChessServer.stake_interval_check(game_id)
+            conn |>  put_resp_content_type("application/json")
+            |> send_resp(
+              200,
+              Jason.encode!(%{result: %{ success: true},  message: "Applied for replay successfully"})
+            )
+          else
+            case ChessServer.start_game(game_id) do
+              "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
+                {:ok, _} ->
 
 
-                    if res.is_staked do
-                      KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: res.game_id ,session_id: res.session_id} , "create_new_game_record")
-                    end
-                    KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id}, Constants.kafka_game_general_event_key())
-
-                    conn
-                    |> put_resp_content_type("application/json")
-                    |> send_resp(
-                      200,
-                      Jason.encode!(%{result: %{ success: true}})
-                    )
-
-                    Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
-                    Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
-
-                    _ ->
-
-                      Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
-                      Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
-                      KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
-                      ChessSupervisor.stop_game(game_id)
+                 if res.is_staked do
+                   KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: res.game_id ,session_id: res.session_id} , "create_new_game_record")
                  end
-                  "error" ->
-                    Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
-                    Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
-                    KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
-                    ChessSupervisor.stop_game(game_id)
+                 KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id}, Constants.kafka_game_general_event_key())
+
+                 conn
+                 |> put_resp_content_type("application/json")
+                 |> send_resp(
+                   200,
+                   Jason.encode!(%{result: %{ success: true}})
+                 )
+
+                 Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
+                 Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
+
+                 _ ->
+
+                   Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
+                   Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+                   KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                   ChessSupervisor.stop_game(game_id)
+              end
+               "error" ->
+                 Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
+                 Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+                 KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                 ChessSupervisor.stop_game(game_id)
+       end
           end
 
 
@@ -768,7 +777,8 @@ end
   post "/update_player_stake" do
 
 
-    %{"username" => username ,"user_id" => user_id ,  "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id , "wallet_key" => wallet_key} = conn.body_params
+    %{"username" => username ,"user_id" => user_id ,  "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id , "wallet_key" => wallet_key,
+    "is_replay" => is_replay} = conn.body_params
 
 
     case ChessServer.update_player_stake(game_id , user_id) do
@@ -798,10 +808,61 @@ end
 
           KafkaProducer.send_message(Constants.kafka_create_user_bet_topic(),  user_bet_event, "game-bet")
 
+
+          has_everyone_staked = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-staked" end)
+
+          if !has_everyone_staked do
+
+            Endpoint.broadcast!("game:chess:"<> game_id , "player-stake-complete" , %{})
+            Endpoint.broadcast!("spectate:chess:"<> game_id , "player-stake-complete" , %{})
+
+
+            case ChessServer.start_game(game_id) do
+              "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
+                {:ok, _} ->
+
+                 KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: res.game_id ,session_id: res.session_id} , "create_new_game_record")
+                 KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id}, Constants.kafka_game_general_event_key())
+
+                 conn
+                 |> put_resp_content_type("application/json")
+                 |> send_resp(
+                   200,
+                   Jason.encode!(%{result: %{ success: true} , message: "Succesfully staked"})
+                 )
+
+                 Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
+                 Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
+
+                 _ ->
+
+                   Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
+                   Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+                   KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                   ChessSupervisor.stop_game(game_id)
+              end
+               "error" ->
+                 Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
+                 Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+                 KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                 ChessSupervisor.stop_game(game_id)
+          end
+
             conn |> put_resp_content_type("application/json") |> send_resp(
               201,
               Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
             )
+
+          else
+
+            conn |> put_resp_content_type("application/json") |> send_resp(
+              201,
+              Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
+            )
+
+          end
+
+
 
 
 
