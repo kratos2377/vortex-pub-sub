@@ -679,14 +679,28 @@ end
         if !has_not_ready do
 
           if res.is_staked do
-            ChessServer.stake_interval_check(game_id)
-            conn |>  put_resp_content_type("application/json")
-            |> send_resp(
-              200,
-              Jason.encode!(%{result: %{ success: true},  message: "Applied for replay successfully"})
-            )
+            game_state_key = GenerateKeyNames.get_chess_state_key(game_id)
+              case Redix.command(["SET", game_state_key, Constants.chess_starting_state()]) do
+              {:ok , _} ->
+
+                ChessServer.stake_interval_check(game_id)
+                conn |>  put_resp_content_type("application/json")
+                |> send_resp(
+                  200,
+                  Jason.encode!(%{result: %{ success: true},  message: "Applied for replay successfully"})
+                )
+
+
+                _ ->
+                  Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
+                  Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+                  KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                  ChessSupervisor.stop_game(game_id)
+              end
           else
-            case ChessServer.start_game(game_id) do
+            game_state_key = GenerateKeyNames.get_chess_state_key(game_id)
+              case Redix.command(["SET", game_state_key, Constants.chess_starting_state()]) do
+                {:ok , _} ->   case ChessServer.start_game(game_id) do
               "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
                 {:ok, _} ->
 
@@ -715,21 +729,28 @@ end
                  KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
                  ChessSupervisor.stop_game(game_id)
        end
+
+
+       _ ->
+        Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
+        Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
+        KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+        ChessSupervisor.stop_game(game_id)
+      end
+              end
           end
 
 
-        end
-
-        conn |>  put_resp_content_type("application/json")
-      |> send_resp(
-        200,
-        Jason.encode!(%{result: %{ success: true},  message: "Applied for replay successfully"})
-      )
 
       _ ->  conn |>   put_resp_content_type("application/json") |> send_resp(
         400,
         Jason.encode!(%{result: %{ success: false},  error_message: "Error while setting status"})
       )
+
+    end
+
+
+
     end
   end
 
@@ -1040,6 +1061,3 @@ end
     end
 
   end
-
-
-end
