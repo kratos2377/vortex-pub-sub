@@ -14,6 +14,7 @@ defmodule VortexPubSub.GameLogicController do
   alias JsonResult
   alias VortexPubSub.KafkaProducer
   alias VortexPubSub.Utils.GenerateKeyNames
+  alias VortexPubSub.Redix
 
   plug(VortexPubSub.Hypernova.Cors)
 
@@ -782,7 +783,7 @@ end
 
 
 
-        :ok ->
+        {:ok , res} ->
 
           #Generate event for game and spectate channel
           # Generate Kafka Event for Cerotis MS
@@ -1019,6 +1020,24 @@ end
       Jason.encode!(%{result: %{ success: true},  message: "Succesfully Published"})
     )
 
+
+  end
+
+  post "/add_key_in_redis" do
+    %{"key" => key , "payload" => payload} = conn.body_params
+    case Redix.command(["SET" , key , payload]) do
+      { :ok , _ } ->
+        conn |>  put_resp_content_type("application/json")
+    |> send_resp(
+      200,
+      Jason.encode!(%{result: %{ success: true},  message: "Successfully added in redis"})
+    )
+        _ -> conn |>  put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: "Error while adding key in redis"})
+        )
+    end
 
   end
 
