@@ -219,8 +219,6 @@ defmodule MaelStorm.ChessServer do
     def handle_call({:update_player_stake , user_id} , _from , state) do
 
       res = ChessStateManager.update_player_staked_status(state , user_id , "staked")
-      IO.puts("After staking new map is")
-      IO.inspect(res)
       {:reply , {:ok , res} ,  res}
 
 
