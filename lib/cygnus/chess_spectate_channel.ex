@@ -77,7 +77,6 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
   end
 
   def handle_out("game-over" ,  payload , socket) do
-    IO.puts("Broadcasting new game over event")
     broadcast!(socket , "game-over-for-spectators" ,  payload)
     {:noreply,socket}
   end
@@ -131,14 +130,14 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
 
 
   def handle_out("player-staking-available" , payload , socket) do
-    broadcast!(socket, "player-staking-available-spectator", payload )
+   # broadcast!(socket, "player-staking-available-spectator", payload )
     {:noreply,socket}
   end
 
 
 
   def handle_out("player-stake-complete" , payload , socket) do
-    broadcast!(socket, "player-stake-complete-spectator", payload )
+  #  broadcast!(socket, "player-stake-complete-spectator", payload )
     {:noreply,socket}
   end
 

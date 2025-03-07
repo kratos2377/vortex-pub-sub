@@ -155,7 +155,6 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   end
 
   def handle_out("start-the-replay-match", payload, socket) do
-    IO.puts("Broadcasting replay match event for users")
     broadcast!(socket, "start-the-replay-match-for-users", payload )
     {:noreply,socket}
   end
@@ -218,8 +217,6 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
     broadcast!(socket, "player-did-not-staked-within-time-user", payload )
     {:noreply,socket}
   end
-
-  #Add stalemate events
 
   defp current_player(socket) do
       socket.assigns.current_player

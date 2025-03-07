@@ -321,8 +321,10 @@ defmodule MaelStorm.ChessServer do
 
               white_player = Enum.at(state.turn_map , 0)
               black_player = Enum.at(state.turn_map , 1)
-              Endpoint.broadcast!("game:chess:"<> state.game_id , "game-over-time" , white_player)
-              Endpoint.broadcast!("spectate:chess:"<> state.game_id , "game-over-time" , white_player)
+              Endpoint.broadcast!("game:chess:"<> state.game_id , "game-over-time" , %{winner_username: black_player.username , winner_user_id: black_player.user_id,
+                loser_username: white_player.username , loser_user_id: white_player.user_id})
+              Endpoint.broadcast!("spectate:chess:"<> state.game_id , "game-over-time" , %{winner_username: black_player.username , winner_user_id: black_player.user_id,
+              loser_username: white_player.username , loser_user_id: white_player.user_id})
 
               MaelStorm.ChessServer.set_state_to_game_over(state.game_id , false , black_player.user_id)
               ChessSupervisor.stop_game(state.game_id )
@@ -330,8 +332,10 @@ defmodule MaelStorm.ChessServer do
             "black" ->
               white_player = Enum.at(state.turn_map , 0)
               black_player = Enum.at(state.turn_map , 1)
-              Endpoint.broadcast!("game:chess:"<> state.game_id , "game-over-time" , black_player)
-              Endpoint.broadcast!("spectate:chess:"<> state.game_id , "game-over-time" , black_player)
+              Endpoint.broadcast!("game:chess:"<> state.game_id , "game-over-time" , %{winner_username: white_player.username , winner_user_id: white_player.user_id,
+              loser_username: black_player.username , loser_user_id: black_player.user_id})
+              Endpoint.broadcast!("spectate:chess:"<> state.game_id , "game-over-time" , %{winner_username: white_player.username , winner_user_id: white_player.user_id,
+              loser_username: black_player.username , loser_user_id: black_player.user_id})
               MaelStorm.ChessServer.set_state_to_game_over(state.game_id , false , white_player.user_id)
               ChessSupervisor.stop_game(state.game_id )
 
