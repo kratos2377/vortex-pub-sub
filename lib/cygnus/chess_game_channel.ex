@@ -97,7 +97,12 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
    {:noreply,socket}
   end
 
+  def handle_in("stalemate-move", %{"color_in_stalemate" => color_in_stalemate , "player_one_username" => player_one_username , "player_one_user_id" => player_one_user_id} , socket) do
+    broadcast!(socket, "stalemate", %{color_in_stalemate: color_in_stalemate, player_one_username: player_one_username, player_one_user_id: player_one_user_id } )
+   # KafkaProducer.send_message(Constants.kafka_user_topic(),  %{admin_id: admin_id, game_id: game_id}, Constants.kafka_verifying_game_status_event_key())
 
+   {:noreply,socket}
+  end
 
   def handle_in("checkmate-accepted", %{"color_in_check_mate" => color_in_check_mate , "winner_username" => winner_username, "winner_user_id" => winner_user_id,
   "loser_username" => loser_username , "loser_user_id" => loser_user_id , "game_id" => game_id} , socket) do
@@ -111,6 +116,23 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
 
     KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: winner_user_id , game_id: game_id , score: 20})
     KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: loser_user_id , game_id: game_id , score: -10})
+
+   {:noreply,socket}
+  end
+
+
+  def handle_in("stalemate-accepted", %{"color_in_stalemate" => color_in_stalemate , "player_one_username" => player_one_username, "player_one_user_id" => player_one_user_id,
+  "player_two_username" => player_two_username , "player_two_user_id" => player_two_user_id , "game_id" => game_id} , socket) do
+    broadcast!(socket, "game-over-stalemate", %{color_in_stalemate: color_in_stalemate  , player_one_username:  player_one_username, player_one_user_id: player_one_user_id, player_two_username: player_two_username, player_two_user_id: player_two_user_id} )
+
+    ChessServer.set_state_to_game_over_stalemate(game_id , true)
+    Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "game-over-stalemate",   %{color_in_stalemate: color_in_stalemate , player_one_username:  player_one_username, player_one_user_id: player_one_user_id, player_two_username: player_two_username, player_two_user_id: player_two_user_id , game_id: game_id} )
+
+    # Reset Game Status for replay
+    ChessServer.reset_game_state(game_id)
+
+    KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: player_one_user_id , game_id: game_id , score: 5})
+    KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: player_two_user_id , game_id: game_id , score: 5})
 
    {:noreply,socket}
   end

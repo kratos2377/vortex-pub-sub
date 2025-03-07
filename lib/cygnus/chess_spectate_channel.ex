@@ -82,6 +82,11 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
     {:noreply,socket}
   end
 
+  def handle_out("game-over-stalemate" ,  payload , socket) do
+    broadcast!(socket , "game-over-stalemate-for-spectators" ,  payload)
+    {:noreply,socket}
+  end
+
   def handle_out("start-the-replay-match", payload, socket) do
     broadcast!(socket, "start-the-replay-match-for-spectators", payload )
     {:noreply,socket}

@@ -73,6 +73,10 @@ defmodule MaelStorm.ChessServer do
         GenServer.call(via_tuple(game_id), {:set_state_to_game_over , is_valid , winner_id , game_id})
     end
 
+    def set_state_to_game_over_stalemate(game_id , is_valid) do
+      GenServer.call(via_tuple(game_id), {:set_state_to_game_over_stalemate , is_valid , game_id})
+  end
+
     def check_if_stake_is_possible(game_id) do
       GenServer.call(via_tuple(game_id), {:check_if_stake_is_possible})
     end
@@ -199,6 +203,14 @@ defmodule MaelStorm.ChessServer do
       res = ChessStateManager.set_state_to_game_over(state)
       if res.is_staked do
           KafkaProducer.send_message(Constants.kafka_user_game_over_topic() , %{game_id: game_id , session_id: res.session_id , winner_id: winner_id , is_game_valid: is_valid} , "game-over-event")
+      end
+      {:reply ,  res , res}
+    end
+
+    de handle_call({:set_state_to_game_over_stalemate , is_valid , game_id} , _from , state) do
+      res = ChessStateManager.set_state_to_game_over(state)
+      if res.is_staked do
+          KafkaProducer.send_message(Constants.kafka_user_game_over_topic() , %{game_id: game_id , session_id: res.session_id , winner_id: "" , is_game_valid: is_valid} , "game-over-event")
       end
       {:reply ,  res , res}
     end
