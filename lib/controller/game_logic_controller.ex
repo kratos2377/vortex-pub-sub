@@ -752,7 +752,7 @@ end
 
 
     end
-  end
+
 
 
   post "/publish_user_stake" do
@@ -1061,3 +1061,4 @@ end
     end
 
   end
+end

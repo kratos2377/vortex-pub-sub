@@ -207,7 +207,7 @@ defmodule MaelStorm.ChessServer do
       {:reply ,  res , res}
     end
 
-    de handle_call({:set_state_to_game_over_stalemate , is_valid , game_id} , _from , state) do
+    def handle_call({:set_state_to_game_over_stalemate , is_valid , game_id} , _from , state) do
       res = ChessStateManager.set_state_to_game_over(state)
       if res.is_staked do
           KafkaProducer.send_message(Constants.kafka_user_game_over_topic() , %{game_id: game_id , session_id: res.session_id , winner_id: "" , is_game_valid: is_valid} , "game-over-event")

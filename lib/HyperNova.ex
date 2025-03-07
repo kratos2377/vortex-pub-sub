@@ -16,16 +16,16 @@ defmodule Hypernova do
   end
 
 
-  pipeline :protected do
-    plug VortexPubSub.Plugs.Authenticate
-  end
+  # pipeline :protected do
+  #   plug VortexPubSub.Plugs.Authenticate
+  # end
 
-
-  #might remove this middleware
- scope "/" do
-  pipe_through [:protected]
   forward("/api/v1/game", to: GameLogicController)
- end
+  #might remove this middleware
+#  scope "/" do
+#   pipe_through [:protected]
+#   forward("/api/v1/game", to: GameLogicController)
+#  end
 
   get "/health" do
     send_resp(conn , 200 , "Health Check Pass")
