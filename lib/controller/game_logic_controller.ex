@@ -294,7 +294,7 @@ end
   end
 
   post "/update_player_status" do
-    %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "status" => status , "is_replay" => is_replay , "is_match" => is_match} = conn.body_params
+    %{"game_id" => game_id, "game_name" => game_name, "user_id" => user_id, "status" => status , "is_match" => is_match} = conn.body_params
 
     case game_name do
       "chess" -> case GameMutation.update_player_status(  game_id, game_name  , user_id , status) do
