@@ -696,6 +696,11 @@ end
                   Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
                   KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
                   ChessSupervisor.stop_game(game_id)
+
+                  conn |>   put_resp_content_type("application/json") |> send_resp(
+                  400,
+                  Jason.encode!(%{result: %{ success: false},  error_message: "Error while setting status"})
+                )
               end
           else
             game_state_key = GenerateKeyNames.get_chess_state_key(game_id)
@@ -706,6 +711,10 @@ end
 
                  KafkaProducer.send_message(Constants.kafka_game_topic(), %{message: "start-game", game_id: game_id}, Constants.kafka_game_general_event_key())
 
+
+                 Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
+                 Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
+
                  conn
                  |> put_resp_content_type("application/json")
                  |> send_resp(
@@ -713,8 +722,6 @@ end
                    Jason.encode!(%{result: %{ success: true}})
                  )
 
-                 Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
-                 Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
 
                  _ ->
 
@@ -722,12 +729,22 @@ end
                    Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
                    KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
                    ChessSupervisor.stop_game(game_id)
+
+                  conn |>   put_resp_content_type("application/json") |> send_resp(
+                  400,
+                  Jason.encode!(%{result: %{ success: false},  error_message: "Error while setting status"})
+                )
               end
                "error" ->
                  Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
                  Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
                  KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
                  ChessSupervisor.stop_game(game_id)
+
+              conn |>   put_resp_content_type("application/json") |> send_resp(
+                400,
+                Jason.encode!(%{result: %{ success: false},  error_message: "Error while setting status"})
+              )
        end
 
 
@@ -736,6 +753,11 @@ end
         Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
         KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
         ChessSupervisor.stop_game(game_id)
+
+            conn |>   put_resp_content_type("application/json") |> send_resp(
+            400,
+            Jason.encode!(%{result: %{ success: false},  error_message: "Error while setting status"})
+          )
       end
               end
           end

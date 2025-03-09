@@ -280,6 +280,7 @@ defmodule MaelStorm.ChessServer do
           end
 
           _ -> Logger.info("Game has either been stopped or in lobby state for gameId=#{state.game_id}")
+          {:noreply , state}
         end
 
      end
@@ -309,6 +310,7 @@ defmodule MaelStorm.ChessServer do
         end
 
         _ -> Logger.info("Game has either been stopped or in lobby state for gameId=#{state.game_id}")
+        {:noreply , state}
       end
 
     end

@@ -89,17 +89,17 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
           "IN-PROGRESS" ->
 
-            Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"] , user_id_who_won: won_user["user_id"] , user_username_who_won: won_user["username"]} )
-          Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"], user_id_who_won: won_user["user_id"] , user_username_who_won: won_user["username"]} )
+            Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"] , user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
+          Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"], user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
 
-          ChessServer.set_state_to_game_over(user_model["game_id"] , false , won_user["user_id"])
+          ChessServer.set_state_to_game_over(user_model["game_id"] , false , won_user.user_id)
 
           KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: user_id , game_id: user_model["game_id"] , score: -15})
-          KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: won_user["user_id"] , game_id: user_model["game_id"] , score: 10})
+          KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: won_user.user_id , game_id: user_model["game_id"] , score: 10})
           _ ->
 
-            Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "user-left-event" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"] , user_id_who_won: won_user["user_id"] , user_username_who_won: won_user["username"]} )
-            Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "user-left-event" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"], user_id_who_won: won_user["user_id"] , user_username_who_won: won_user["username"]} )
+            Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "user-left-event" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"] , user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
+            Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "user-left-event" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"], user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
 
 
         end
