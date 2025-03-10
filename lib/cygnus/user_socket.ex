@@ -101,6 +101,9 @@ defmodule VortexPubSub.Cygnus.UserSocket do
             Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "user-left-event" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"] , user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
             Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "user-left-event" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"], user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
 
+            #this game can be treated as stalemate case as there is no clear winner since the game was not running
+            # both players will be compensated their original amount back
+            ChessServer.set_state_to_game_over(user_model["game_id"] , true , "")
 
         end
 
