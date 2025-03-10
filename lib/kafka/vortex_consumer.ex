@@ -16,7 +16,7 @@ defmodule VortexPubSub.KafkaConsumer do
     config = %{
       client: :kafka_client,
       group_id: "vortex",
-      topics: ["user" , "game" , "user-matchmaking"],
+      topics: ["user", "user-matchmaking"],
       cb_module: __MODULE__,
       group_config: group_config,
       consumer_config: [begin_offset: :earliest]

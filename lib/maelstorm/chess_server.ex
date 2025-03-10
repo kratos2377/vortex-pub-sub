@@ -104,32 +104,8 @@ defmodule MaelStorm.ChessServer do
     end
 
     def handle_call({:join_lobby, user_id , username}, _from, state) do
-      case ChessStateManager.add_new_player(state , user_id , username) do
-        :error -> {:reply , :lobby_full , state}
-
-        res ->
-          if res.total_players == 2 do
-            IO.puts("Total two player joined")
-
-            if res.is_staked do
-
-            start_stake_check_interval_update()
-            {:reply , res.player_count_index , res}
-
-            else
-              {:reply , res.player_count_index , res}
-            end
-
-
-
-          else
-
-              {:reply , res.player_count_index , res}
-          end
-
-      end
-
-
+      res = ChessStateManager.add_new_player(state , user_id , username)
+      {:reply , res.player_count_index , res}
     end
 
 

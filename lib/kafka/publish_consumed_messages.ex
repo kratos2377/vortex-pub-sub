@@ -14,10 +14,22 @@ defmodule VortexPubSub.PublishMessages do
     case key do
 
       "match-found" -> make_game_room_and_publish_data(key , data)
+
+      "friend-request-event" -> send_friend_req_event(key , data)
       _ ->
         Logger.error("Invalid Key")
     end
 
+  end
+
+
+  defp send_friend_req_event(key , data) do
+    IO.inspect("FRIEND REQ DATA EVENTS IS")
+    IO.inspect(data)
+
+    user_notif_channel = "user:notifications:" <> data["user_who_we_are_sending_event"]
+
+    start_async_publishing(user_notif_channel , data , key)
   end
 
 
@@ -57,15 +69,8 @@ defmodule VortexPubSub.PublishMessages do
       {:ok , _ , session_id} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
 
 
-      start_async_publishing(topic1 , %{index: 0 , opponent_details: player2 , game_id: game_id} , "match-found-details")
-      start_async_publishing(topic2 , %{index: 1 , opponent_details: player1 , game_id: game_id} , "match-found-details")
-
-
-      if game_type == "staked" do
-        KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: game_id , session_id: session_id} ,
-        "new_game_record")
-        ChessServer.stake_interval_check(game_id)
-      end
+      start_async_publishing(topic1 , %{index: 0 , opponent_details: player2 , game_id: game_id , game_type: game_type} , "match-found-details")
+      start_async_publishing(topic2 , %{index: 1 , opponent_details: player1 , game_id: game_id , game_type: game_type} , "match-found-details")
 
 
       {:error , message} -> Logger.info("Error while spawning ChessProcess for '#{game_id}'. with some error '#{message}'")
