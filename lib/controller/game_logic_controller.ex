@@ -306,7 +306,7 @@ end
 
             if !has_not_ready do
 
-            case res.staked do
+            case res.is_staked do
 
               true ->
 
@@ -373,7 +373,7 @@ end
          "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
            {:ok, _} ->
 
-
+              _ =   ChessServer.start_interval_update(game_id)
 
             conn
             |> put_resp_content_type("application/json")
@@ -730,6 +730,8 @@ end
                  Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
                  Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
 
+                 _ =   ChessServer.start_interval_update(game_id)
+
                  conn
                  |> put_resp_content_type("application/json")
                  |> send_resp(
@@ -882,6 +884,10 @@ end
                   {:ok, _} ->
 
 
+                   Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
+                   Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
+
+                   _ =   ChessServer.start_interval_update(game_id)
 
                    conn
                    |> put_resp_content_type("application/json")
@@ -890,8 +896,6 @@ end
                      Jason.encode!(%{result: %{ success: true} , message: "Succesfully staked"})
                    )
 
-                   Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
-                   Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
 
                    _ ->
 

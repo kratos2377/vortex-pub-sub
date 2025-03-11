@@ -51,6 +51,11 @@ defmodule Quasar.ChessStateManager do
   end
 
   def check_game_start_status(%ChessState{} = chess_state) do
+
+    if chess_state.total_players < 2 do
+      chess_state
+    end
+
     has_not_ready = Enum.any?(chess_state.player_ready_status, fn {_key, value} -> value == "not-ready" end)
 
   if has_not_ready do
