@@ -26,9 +26,14 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
   def handle_info({:after_join, game_id}, socket) do
     summary = ChessServer.summary(game_id)
 
-    {:ok , encoded_data} = Jason.encode(summary)
+      case Jason.encode(summary) do
+        {:ok , encoded_data} ->
+          push(socket, "game_current_state", %{data: encoded_data})
 
-    push(socket, "game_current_state", %{data: encoded_data})
+          {:error , err } -> Logger.info("Error occured while encoding summary")
+      end
+
+
 
 
     {:noreply, socket}

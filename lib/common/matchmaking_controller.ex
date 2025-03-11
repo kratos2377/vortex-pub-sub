@@ -6,6 +6,9 @@ defmodule VortexPubSub.MatchmakingController do
 def start_user_matchmaking(user_id , username , score , game_type) do
 
   new_user_ticket_changeset = make_user_ticket_changeset(user_id , username, score , game_type)
+  IO.inspect("Game matchmaking changeset is")
+  IO.inspect(user_id)
+  IO.inspect(new_user_ticket_changeset)
   {:ok , req_body} = Jason.encode(new_user_ticket_changeset)
 
    case HTTPoison.post( @matchmaking_base_url <> "matchmaking/tickets" , req_body , %{"Content-Type": "application/json"} ) do

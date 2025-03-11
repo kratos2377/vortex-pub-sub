@@ -1,7 +1,7 @@
 defmodule GameState.ChessState do
 
   import Holmberg.Schemas.TurnModel
-  @derive [Jason.Encoder]
+  @derive {Jason.Encoder, except: [:game_timer_ref, :stake_timer_ref]}
 
 
   defstruct game_id: "", turn_map: [], turn_count: 0, total_players: 0, time_left_for_white_player: 0, time_left_for_black_player: 0, player_count_index: 0, current_turn: "", status: "", player_ready_status: %{}, is_staked: false, session_id: "", player_staked_status: %{}, staking_player_time: 182, game_timer_ref: nil , stake_timer_ref: nil

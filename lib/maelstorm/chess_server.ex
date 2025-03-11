@@ -114,7 +114,9 @@ defmodule MaelStorm.ChessServer do
     end
 
     def handle_call({:get_summary}, _from, state) do
-        {:reply , state , state}
+
+        new_map = Map.drop(state, [:game_timer_ref, :stake_timer_ref])
+        {:reply , new_map , state}
     end
 
     def handle_call({:leave_lobby, user_id }, _from, state) do
