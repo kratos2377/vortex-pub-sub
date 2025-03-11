@@ -277,9 +277,44 @@ end
 
                 _ -> case is_match do
                   true ->
+                      res =  ChessServer.start_game(game_id)
 
-                    Endpoint.broadcast!("game:chess:" <> game_id , "start-the-match" , %{game_id: game_id})
-                    Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-match" , %{game_id: game_id})
+                      case res do
+                        "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
+                          {:ok, _} ->
+
+
+                           conn
+                           |> put_resp_content_type("application/json")
+                           |> send_resp(
+                             200,
+                             Jason.encode!(%{result: %{ success: true}})
+                           )
+
+                           Endpoint.broadcast!("game:chess:" <> game_id , "start-the-match" , %{game_id: game_id})
+                           Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-match" , %{game_id: game_id})
+
+                           _ ->
+
+
+                            Endpoint.broadcast!("game:chess:" <> game_id , "start-the-match-error" , %{game_id: game_id})
+                            Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-match-error" , %{game_id: game_id})
+
+                            conn
+                           |> put_resp_content_type("application/json")
+                           |> send_resp(
+                             400,
+                             Jason.encode!(%{result: %{ success: false},  error_message: Constants.error_while_updating_mongo_entities()})
+                           )
+                        end
+                         "error" -> conn
+                         |> put_resp_content_type("application/json")
+                         |> send_resp(
+                           400,
+                           Jason.encode!(%{result: %{ success: false},  error_message: Constants.all_players_not_ready()})
+                         )
+                      end
+
 
 
                     _ -> Logger.info("GameProcess is not for a match: #{game_id}")
@@ -521,24 +556,40 @@ end
   post "/get_game_details" do
     %{"game_id" => game_id} = conn.body_params
     game_state_key = GenerateKeyNames.get_chess_state_key(game_id)
-    case Mongo.find_one(:mongo, "games", %{id: game_id}) do
-      game_model -> case Redix.command(["GET" , game_state_key]) do
-        { :ok , state } ->
-          conn |>  put_resp_content_type("application/json")
-      |> send_resp(
-        200,
-        Jason.encode!(%{result: %{ success: true},  game: game_model , chess_state: state })
-      )
-          _ -> conn |>  put_resp_content_type("application/json")
-          |> send_resp(
-            400,
-            Jason.encode!(%{result: %{ success: false},  error_message: "Error while fetching game state from redis"})
-          )
+    case ChessServer.is_in_game_over_state(game_id) do
+      :yes ->     case Mongo.find_one(:mongo, "games", %{id: game_id}) do
+        nil -> conn |>  put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: "No Game Mapping found"})
+        )
+
+        {:error , _} -> conn |>  put_resp_content_type("application/json")
+        |> send_resp(
+          400,
+          Jason.encode!(%{result: %{ success: false},  error_message: "No Game Mapping found"})
+        )
+
+        game_model -> case Redix.command(["GET" , game_state_key]) do
+          { :ok , state } ->
+            conn |>  put_resp_content_type("application/json")
+        |> send_resp(
+          200,
+          Jason.encode!(%{result: %{ success: true},  game: game_model , chess_state: state })
+        )
+            _ -> conn |>  put_resp_content_type("application/json")
+            |> send_resp(
+              400,
+              Jason.encode!(%{result: %{ success: false},  error_message: "Error while fetching game state from redis"})
+            )
+        end
+
       end
-      {:error , _} -> conn |>  put_resp_content_type("application/json")
+
+      :no ->  conn |>  put_resp_content_type("application/json")
       |> send_resp(
         400,
-        Jason.encode!(%{result: %{ success: false},  error_message: "No Game Mapping found"})
+        Jason.encode!(%{result: %{ success: false},  error_message: "Game is over. Unless Players decide to replay you cannot join this room. Try again later"})
       )
     end
   end

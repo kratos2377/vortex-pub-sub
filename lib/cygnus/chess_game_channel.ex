@@ -20,7 +20,8 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   end
 
   intercept ["joined-room" , "start-the-replay-match" , "start-the-match" , "game-over-time" , "default-win-because-user-left", "user-left-event",
-  "replay-false-event-user", "player-staking-available" , "player-stake-complete", "user-game-bet-event" , "player-did-not-staked-within-time"]
+  "replay-false-event-user", "player-staking-available" , "player-stake-complete", "user-game-bet-event" , "player-did-not-staked-within-time",
+  "start-the-match-error"]
   def handle_out("joined-room", payload, socket) do
     #Add logic to prevent user from joining if the game is in progress
     broadcast!(socket, "new-user-joined", %{user_id: payload.user_id, username: payload.username, game_id: payload.game_id})
@@ -170,6 +171,12 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   def handle_out("start-the-match", payload, socket) do
     broadcast!(socket, "start-the-match-for-users", payload )
     ChessServer.start_game(payload["game_id"])
+    {:noreply,socket}
+  end
+
+  def handle_out("start-the-match-error", payload, socket) do
+    broadcast!(socket, "start-the-match-error-for-users", payload )
+    ChessSupervisor.stop_game(payload["game_id"])
     {:noreply,socket}
   end
 

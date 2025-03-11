@@ -61,7 +61,7 @@ defmodule Holmberg.Mutation.Game do
     game_id = Ecto.UUID.generate()
     game_state_key = GenerateKeyNames.get_chess_state_key(game_id)
     #Only Chess is supported as of now
-    game_changeset = create_match_game_changeset(game_id, game_type , "chess")
+    game_changeset = create_match_game_changeset(game_id,  "chess" , game_type )
     match_user_changeset_first = create_user_match_relation_changeset(game_id, player1.user_id, player1.username)
     match_user_changeset_second = create_user_match_relation_changeset(game_id, player2.user_id, player2.username)
     user_turn_mapping_changeset = create_match_turns_mapping_changeset(game_id, player1 , player2)
@@ -198,7 +198,7 @@ defmodule Holmberg.Mutation.Game do
       state_index: 0,
       description: "LOBBY",
       is_match: false,
-      chess_state: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      chess_state: "",
       staked_money_state: "",
       poker_state: "",
       scribble_state: "",
@@ -238,18 +238,18 @@ defmodule Holmberg.Mutation.Game do
     turn_mapping_model
   end
 
-# Mathed Players Match
+# Matched Players Match
   defp create_match_game_changeset(game_id, game_name, game_type) do
     game_model = %{
       id: game_id,
       user_count: 2,
       host_id: nil,
       name: game_name,
-      game_type: game_name,
+      game_type: game_type,
       is_staked:  game_type == "staked",
       state_index: 0,
       is_match: true,
-      description: "INIT",
+      description: "LOBBY",
       chess_state: "",
       staked_money_state: "",
       poker_state: "",
@@ -298,8 +298,8 @@ defmodule Holmberg.Mutation.Game do
   end
 
 
-    defp handle_transaction_error(failed_operation, failed_value) do
-      error_message = "Error in #{failed_operation}: #{inspect(failed_value)}"
-      {:error, :game_manager_error, error_message}
-    end
+  defp handle_transaction_error(failed_operation, failed_value) do
+    error_message = "Error in #{failed_operation}: #{inspect(failed_value)}"
+    {:error, :game_manager_error, error_message}
+  end
 end

@@ -95,12 +95,24 @@ defmodule MaelStorm.ChessServer do
       GenServer.call(via_tuple(game_id), {:stake_interval_check})
     end
 
+    def is_in_game_over_state(game_id) do
+      GenServer.call(via_tuple(game_id), {:is_in_game_over_state})
+    end
+
 
     #Server Callbacks
 
     def init({chess_state}) do
       #Logger.info("Spawned ChessGameServer with pid='#{self()}' and game_id='#{chess_state.game_id}'")
       {:ok , chess_state}
+    end
+
+    def handle_call({:is_in_game_over_state} , _from , state) do
+      case state.status do
+        "GAME-OVER" -> {:reply , :yes , state}
+
+          _ -> {:reply , :no , state}
+      end
     end
 
     def handle_call({:join_lobby, user_id , username}, _from, state) do

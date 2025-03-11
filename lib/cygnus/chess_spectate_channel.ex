@@ -41,7 +41,8 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
 
   intercept ["new-user-joined" ,"start-game-for-all" ,  "remove-all-users" , "user-left-room" , "user-status-update" , "game-event" ,
   "verifying-game" , "game-over", "start-the-replay-match" , "replay-false-event" , "replay-accepted-by-user" , "start-the-match",
-  "game-over-time", "default-win-because-user-left", "user-left-event" , "player-staking-available" , "player-stake-complete", "user-game-bet-event" , "player-did-not-staked-within-time"]
+  "game-over-time", "default-win-because-user-left", "user-left-event" , "player-staking-available" , "player-stake-complete", "user-game-bet-event" , "player-did-not-staked-within-time",
+    "start-the-match-error"]
 
   def handle_out("new-user-joined" , payload , socket) do
     broadcast!(socket , Constants.kafka_user_joined_event_key() , payload)
@@ -110,6 +111,13 @@ defmodule VortexPubSub.Cygnus.ChessSpectateChannel do
     broadcast!(socket, "start-the-match-for-spectators", payload )
     {:noreply,socket}
   end
+
+  def handle_out("start-the-match-error", payload, socket) do
+    broadcast!(socket, "start-the-match-error-for-spectators", payload )
+    ChessSupervisor.stop_game(payload["game_id"])
+    {:noreply,socket}
+  end
+
 
   def handle_out("game-over-time", payload, socket) do
     broadcast!(socket, "game-over-time-for-spectators", payload )
