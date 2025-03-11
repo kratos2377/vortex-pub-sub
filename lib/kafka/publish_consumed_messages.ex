@@ -66,7 +66,7 @@ defmodule VortexPubSub.PublishMessages do
     {:ok, game_id} -> Logger.info("Game Session created for ther users")
 
     case ChessSupervisor.start_game_of_match_type(game_id , player1 , player2 , game_type == "staked") do
-      {:ok , _ , session_id} ->  Logger.info("Spawned Chess game server process named '#{game_id}'.")
+      {:ok , _ , session_id} ->  Logger.info("Spawned Chess game server process named '#{game_id} with session_id=#{session_id}'.")
 
 
       start_async_publishing(topic1 , %{index: 0 , opponent_details: player2 , game_id: game_id , game_type: game_type} , "match-found-details")

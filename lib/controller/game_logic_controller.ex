@@ -276,7 +276,10 @@ end
                 ChessServer.stake_interval_check(game_id)
 
                 _ -> case is_match do
-                  true ->  Endpoint.broadcast!( "game:chess:" <> game_id , "start-the-match" , %{game_id: game_id})
+                  true ->
+
+                    Endpoint.broadcast!("game:chess:" <> game_id , "start-the-match" , %{game_id: game_id})
+                    Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-match" , %{game_id: game_id})
 
 
                     _ -> Logger.info("GameProcess is not for a match: #{game_id}")
