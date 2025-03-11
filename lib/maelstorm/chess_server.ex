@@ -139,12 +139,14 @@ defmodule MaelStorm.ChessServer do
         "LOBBY" -> {:reply , "error" , state}
           "IN-PROGRESS" ->
 
+            game_timer_ref = schedule_interval_update()
+
             if state.is_staked do
               KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: state.game_id , session_id: state.session_id} , "new_game_record")
-              start_stake_interval_timer()
-              {:reply , "success" , res}
+              stake_timer_ref = start_stake_interval_timer()
+              {:reply , "success" , %{res | game_timer_ref: game_timer_ref , stake_timer_ref: stake_timer_ref}}
             else
-              {:reply , "success" , res}
+              {:reply , "success" , %{res | game_timer_ref: game_timer_ref}}
             end
 
             _ -> {:reply , "error" , state}
@@ -239,16 +241,19 @@ defmodule MaelStorm.ChessServer do
               0 ->
                 game_finished("white" , state)
                 {:noreply , res}
-                _ -> schedule_interval_update()
-                {:noreply, res}
+                _ ->
+                  game_timer_ref = schedule_interval_update()
+                {:noreply, %{res | game_timer_ref: game_timer_ref }}
             end
 
             "black" ->  case res.time_left_for_black_player do
               0 ->
                 game_finished("black" , state)
                 {:noreply ,  res}
-                _ -> schedule_interval_update()
-                {:noreply , res}
+                _ ->
+
+                  game_timer_ref = schedule_interval_update()
+                  {:noreply, %{res | game_timer_ref: game_timer_ref }}
             end
           end
 
@@ -269,16 +274,19 @@ defmodule MaelStorm.ChessServer do
             0 ->
               game_finished("white" , state)
               {:noreply  , res}
-              _ -> schedule_interval_update()
-              {:noreply, res}
+              _ ->
+                game_timer_ref = schedule_interval_update()
+                {:noreply, %{res | game_timer_ref: game_timer_ref }}
           end
 
           "black" ->  case res.time_left_for_black_player do
             0 ->
               game_finished("black" , state)
               {:noreply , res}
-              _ -> schedule_interval_update()
-              {:noreply , res}
+              _ ->
+
+                game_timer_ref = schedule_interval_update()
+                {:noreply, %{res | game_timer_ref: game_timer_ref }}
           end
         end
 
@@ -417,11 +425,14 @@ defmodule MaelStorm.ChessServer do
 
           if total_time > 300 do
               KafkaProducer.send_message(Constants.kafka_stake_time_over() , %{game_id: state.game_id , session_id: state.session_id} , "stake_time_over")
-          else
-            start_stake_interval_timer()
+
+              {:noreply, state}
+         else
+          stake_timer_ref = start_stake_interval_timer()
+            {:noreply, %{state | stake_timer_ref: stake_timer_ref}}
           end
 
-          {:noreply, state}
+
 
         else
           {:noreply, state}
@@ -442,11 +453,12 @@ def handle_info(:stake_interval_timer, state) do
 
         if total_time > 300 do
             KafkaProducer.send_message(Constants.kafka_stake_time_over() , %{game_id: state.game_id , session_id: state.session_id} , "stake_time_over")
-        else
-          start_stake_interval_timer()
+            {:noreply, state}
+          else
+          stake_timer_ref = start_stake_interval_timer()
+            {:noreply, %{state | stake_timer_ref: stake_timer_ref}}
         end
 
-        {:noreply, state}
 
       else
         {:noreply, state}

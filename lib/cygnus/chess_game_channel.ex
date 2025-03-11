@@ -170,7 +170,6 @@ defmodule VortexPubSub.Cygnus.ChessGameChannel do
   def handle_out("start-the-match", payload, socket) do
     broadcast!(socket, "start-the-match-for-users", payload )
     ChessServer.start_game(payload["game_id"])
-    _ =   ChessServer.start_interval_update(payload["game_id"])
     {:noreply,socket}
   end
 

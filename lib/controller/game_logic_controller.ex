@@ -373,7 +373,6 @@ end
          "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
            {:ok, _} ->
 
-              _ =   ChessServer.start_interval_update(game_id)
 
             conn
             |> put_resp_content_type("application/json")
@@ -730,7 +729,6 @@ end
                  Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
                  Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
 
-                 _ =   ChessServer.start_interval_update(game_id)
 
                  conn
                  |> put_resp_content_type("application/json")
@@ -887,7 +885,6 @@ end
                    Endpoint.broadcast!("game:chess:"<> game_id , "start-the-replay-match" , %{})
                    Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-replay-match" , %{})
 
-                   _ =   ChessServer.start_interval_update(game_id)
 
                    conn
                    |> put_resp_content_type("application/json")
