@@ -960,6 +960,7 @@ end
                      Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
                      Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
                      KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                     ChessServer.set_state_to_game_over(game_id , true , "")
                      ChessSupervisor.stop_game(game_id)
                 # stake was successful thats why its better to send 2xx status
                 conn |> put_resp_content_type("application/json") |> send_resp(
@@ -971,6 +972,7 @@ end
                    Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
                    Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
                    KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                   ChessServer.set_state_to_game_over(game_id , true , "")
                    ChessSupervisor.stop_game(game_id)
 
                    # stake was successful thats why its better to send 2xx status
@@ -1011,7 +1013,11 @@ end
 
                      _ ->
 
+                      Endpoint.broadcast!("game:chess:" <> game_id , "start-the-match-error" , %{game_id: game_id})
+                      Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-match-error" , %{game_id: game_id})
+
                        KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                       ChessServer.set_state_to_game_over(game_id , true , "")
                        ChessSupervisor.stop_game(game_id)
 
                        conn |> put_resp_content_type("application/json") |> send_resp(
@@ -1027,6 +1033,7 @@ end
                       Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-match-error" , %{game_id: game_id})
 
                       KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                      ChessServer.set_state_to_game_over(game_id , true , "")
                       ChessSupervisor.stop_game(game_id)
 
                    # stake was successful thats why its better to send 2xx status

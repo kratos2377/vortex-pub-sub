@@ -88,7 +88,8 @@ defmodule Quasar.ChessStateManager do
   def reset_game_status(%ChessState{} = chess_state) do
     new_status_map = Map.new(chess_state.player_ready_status , fn {key, _value} -> {key, "not-ready"} end)
     new_staked_map = Map.new(chess_state.player_staked_status , fn {key, _value} -> {key, "not-staked"} end)
-    %{chess_state | player_ready_status: new_status_map , time_left_for_white_player: 901, time_left_for_black_player: 901 , current_turn: "white" , status: "GAME-OVER" , session_id: Nanoid.generate() , player_staked_status: new_staked_map , staking_player_time: 182}
+    %{chess_state | player_ready_status: new_status_map , time_left_for_white_player: 901, time_left_for_black_player: 901 , current_turn: "white" , status: "GAME-OVER" , session_id: Nanoid.generate() , player_staked_status: new_staked_map , staking_player_time: 182,
+    game_timer_ref: nil , stake_timer_ref: nil, lobby_stake_timer_ref: nil}
   end
 
 
