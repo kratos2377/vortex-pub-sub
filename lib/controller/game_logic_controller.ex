@@ -271,9 +271,14 @@ end
 
               true ->
 
-                KafkaProducer.send_message(Constants.kafka_create_new_game_record() , %{game_id: game_id , session_id: res.session_id} ,
-                "new_game_record")
                 ChessServer.stake_interval_check(game_id)
+
+                conn
+                |> put_resp_content_type("application/json")
+                |> send_resp(
+                  200,
+                  Jason.encode!(%{result: %{ success: true}})
+                )
 
                 _ -> case is_match do
                   true ->
@@ -387,12 +392,21 @@ end
               Jason.encode!(%{result: %{ success: false},  error_message: Constants.error_while_updating_mongo_entities()})
             )
          end
-          "error" -> conn
+          "error" -> if res.is_staked do
+            conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(
+              400,
+              Jason.encode!(%{result: %{ success: false},  error_message: "Either all players are not ready or all players have not staked yet"})
+            )
+          else
+            conn
           |> put_resp_content_type("application/json")
           |> send_resp(
             400,
             Jason.encode!(%{result: %{ success: false},  error_message: Constants.all_players_not_ready()})
           )
+          end
        end
 
 
@@ -947,12 +961,23 @@ end
                      Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
                      KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
                      ChessSupervisor.stop_game(game_id)
+                # stake was successful thats why its better to send 2xx status
+                conn |> put_resp_content_type("application/json") |> send_resp(
+                  201,
+                  Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
+                    )
                 end
                  "error" ->
                    Endpoint.broadcast_from!(self() , "game:chess:" <> game_id , "replay-false-event-user",   %{game_id: game_id} )
                    Endpoint.broadcast_from!(self() , "spectate:chess:" <> game_id , "replay-false-event",   %{} )
                    KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
                    ChessSupervisor.stop_game(game_id)
+
+                   # stake was successful thats why its better to send 2xx status
+                   conn |> put_resp_content_type("application/json") |> send_resp(
+                201,
+                Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
+                  )
             end
 
               conn |> put_resp_content_type("application/json") |> send_resp(
@@ -970,17 +995,16 @@ end
 
 
 
-                case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
+                case ChessServer.start_game(game_id) do
+                  "success" -> case Mongo.update_one(:mongo, "games", %{id: game_id}, %{ "$set":  %{description: "IN_PROGRESS"} }) do
                     {:ok, _} ->
 
 
 
-                     conn
-                     |> put_resp_content_type("application/json")
-                     |> send_resp(
-                       200,
-                       Jason.encode!(%{result: %{ success: true} , message: "Succesfully staked"})
-                     )
+                      conn |> put_resp_content_type("application/json") |> send_resp(
+                        201,
+                        Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
+                      )
 
                      Endpoint.broadcast!("game:chess:"<> game_id , "start-the-match" , %{game_id: game_id})
                      Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-match" , %{game_id: game_id})
@@ -989,7 +1013,28 @@ end
 
                        KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
                        ChessSupervisor.stop_game(game_id)
+
+                       conn |> put_resp_content_type("application/json") |> send_resp(
+                        201,
+                        Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
+                      )
                   end
+
+
+                    _ ->
+
+                      Endpoint.broadcast!("game:chess:" <> game_id , "start-the-match-error" , %{game_id: game_id})
+                      Endpoint.broadcast!("spectate:chess:"<> game_id , "start-the-match-error" , %{game_id: game_id})
+
+                      KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: "random-user-id" , game_id: game_id}, Constants.kafka_game_general_event_key())
+                      ChessSupervisor.stop_game(game_id)
+
+                   # stake was successful thats why its better to send 2xx status
+                   conn |> put_resp_content_type("application/json") |> send_resp(
+                201,
+                Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
+                  )
+                end
 
 
 
@@ -1009,6 +1054,12 @@ end
             end
 
            end
+
+          else
+            conn |> put_resp_content_type("application/json") |> send_resp(
+              201,
+              Jason.encode!(%{result: %{ success: true},  message: "Succesfully staked"})
+            )
 
           end
 

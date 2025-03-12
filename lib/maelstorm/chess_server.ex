@@ -348,8 +348,8 @@ defmodule MaelStorm.ChessServer do
           Endpoint.broadcast!("game:chess:"<> state.game_id , "player-staking-available" , %{})
           Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-staking-available" , %{})
          res =  ChessStateManager.update_staking_time(state)
-          start_stake_check_interval_update()
-          {:noreply, res}
+         lobby_stake_timer_ref = start_stake_check_interval_update()
+          {:reply, "success" ,  %{res | lobby_stake_timer_ref: lobby_stake_timer_ref}}
         else
           has_everyone_staked = Enum.any?(state.player_staked_status, fn {_key, value} -> value == "not-staked" end)
 
@@ -359,7 +359,7 @@ defmodule MaelStorm.ChessServer do
             Endpoint.broadcast!("game:chess:"<> state.game_id , "player-stake-complete" , %{})
             Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-stake-complete" , %{})
 
-            {:noreply, state}
+            {:reply, "success",  state}
 
           else
 
@@ -367,13 +367,12 @@ defmodule MaelStorm.ChessServer do
 
               Endpoint.broadcast!("game:chess:"<> state.game_id , "player-did-not-staked-within-time" , %{})
               Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-did-not-staked-within-time" , %{})
-              {:noreply, state}
+              {:reply, "success",  state}
 
             else
               res =  ChessStateManager.update_staking_time(state)
-              start_stake_check_interval_update()
-              {:noreply, res}
-
+              lobby_stake_timer_ref = start_stake_check_interval_update()
+              {:reply, "success" ,  %{res | lobby_stake_timer_ref: lobby_stake_timer_ref}}
             end
 
 
@@ -393,8 +392,8 @@ defmodule MaelStorm.ChessServer do
         Endpoint.broadcast!("game:chess:"<> state.game_id , "player-staking-available" , %{})
         Endpoint.broadcast!("spectate:chess:"<> state.game_id , "player-staking-available" , %{})
         res =  ChessStateManager.update_staking_time(state)
-          start_stake_check_interval_update()
-          {:noreply, res}
+        lobby_stake_timer_ref = start_stake_check_interval_update()
+        {:noreply, %{res | lobby_stake_timer_ref: lobby_stake_timer_ref}}
 
       else
         has_everyone_staked = Enum.any?(state.player_staked_status, fn {_key, value} -> value == "not-staked" end)
@@ -417,8 +416,8 @@ defmodule MaelStorm.ChessServer do
           else
 
             res =  ChessStateManager.update_staking_time(state)
-            start_stake_check_interval_update()
-            {:noreply, res}
+            lobby_stake_timer_ref = start_stake_check_interval_update()
+            {:noreply, %{res | lobby_stake_timer_ref: lobby_stake_timer_ref}}
           end
 
         end
