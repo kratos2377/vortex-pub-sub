@@ -322,7 +322,14 @@ end
 
 
 
-                    _ -> Logger.info("GameProcess is not for a match: #{game_id}")
+                    _ ->
+                      Logger.info("GameProcess is not for a match: #{game_id}")
+                      conn
+                      |> put_resp_content_type("application/json")
+                      |> send_resp(
+                        200,
+                        Jason.encode!(%{result: %{ success: true}})
+                      )
                 end
 
             end
@@ -571,7 +578,7 @@ end
     %{"game_id" => game_id} = conn.body_params
     game_state_key = GenerateKeyNames.get_chess_state_key(game_id)
     case ChessServer.is_in_game_over_state(game_id) do
-      :yes ->     case Mongo.find_one(:mongo, "games", %{id: game_id}) do
+      :no ->     case Mongo.find_one(:mongo, "games", %{id: game_id}) do
         nil -> conn |>  put_resp_content_type("application/json")
         |> send_resp(
           400,
@@ -600,7 +607,7 @@ end
 
       end
 
-      :no ->  conn |>  put_resp_content_type("application/json")
+      :yes ->  conn |>  put_resp_content_type("application/json")
       |> send_resp(
         400,
         Jason.encode!(%{result: %{ success: false},  error_message: "Game is over. Unless Players decide to replay you cannot join this room. Try again later"})

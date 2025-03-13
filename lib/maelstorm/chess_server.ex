@@ -172,6 +172,9 @@ defmodule MaelStorm.ChessServer do
     def handle_call({:reset_game_state}, _from, state) do
 
       res = ChessStateManager.reset_game_status(state)
+      IO.inspect("New session id is")
+      IO.inspect(res.session_id)
+      IO.inspect(res.game_id)
       {:reply , :ok , res }
 
     end
