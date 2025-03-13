@@ -863,7 +863,7 @@ end
   post "/publish_user_stake" do
     #Use this to publish kafka event to update and send socket events
     %{"user_username_who_is_betting" => user_username_who_is_betting,  "user_who_is_betting" => user_who_is_betting , "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type , "amount" => amount , "session_id" => session_id,
-    "event_type"=> event_type} = conn.body_params
+    "event_type"=> event_type , "wallet_key" => wallet_key} = conn.body_params
 
 
     # This API should generate stake events for channels and Kafka event for cerotis and return 201
@@ -874,6 +874,7 @@ end
       game_id: game_id,
       bet_type: bet_type ,
       amount: amount,
+      wallet_key: wallet_key,
       session_id: session_id,
       event_type: event_type,
       is_player: false
