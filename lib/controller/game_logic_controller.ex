@@ -933,7 +933,7 @@ end
           KafkaProducer.send_message(Constants.kafka_create_user_bet_topic(),  user_bet_event, "game-bet")
 
 
-          has_everyone_staked = Enum.any?(res.player_ready_status, fn {_key, value} -> value == "not-staked" end)
+          has_everyone_staked = Enum.any?(res.player_staked_status, fn {_key, value} -> value == "not-staked" end)
 
 
           # replay case
