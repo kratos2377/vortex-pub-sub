@@ -10,6 +10,11 @@ defmodule Hypernova do
   plug(VortexPubSub.Hypernova.Cors)
   plug(:match)
   plug(:dispatch)
+  plug(Plug.Parsers,
+  parsers: [:json],
+  pass: ["text/*"],
+  json_decoder: Jason
+)
 
   options _ do
     send_resp(conn, 200, "")
@@ -19,6 +24,14 @@ defmodule Hypernova do
   # pipeline :protected do
   #   plug VortexPubSub.Plugs.Authenticate
   # end
+
+  get "/api/v1/health" do
+    send_resp(conn , 200 , Jason.encode!(%{
+      app_name: "Vortex Pub Sub",
+      status: "healthy",
+      timestamp: DateTime.utc_now() |> DateTime.to_iso8601()
+    }))
+  end
 
   forward("/api/v1/game", to: GameLogicController)
   #might remove this middleware
