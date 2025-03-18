@@ -399,21 +399,13 @@ end
               Jason.encode!(%{result: %{ success: false},  error_message: Constants.error_while_updating_mongo_entities()})
             )
          end
-          "error" -> if res.is_staked do
+          "error" ->
             conn
             |> put_resp_content_type("application/json")
             |> send_resp(
               400,
               Jason.encode!(%{result: %{ success: false},  error_message: "Either all players are not ready or all players have not staked yet"})
             )
-          else
-            conn
-          |> put_resp_content_type("application/json")
-          |> send_resp(
-            400,
-            Jason.encode!(%{result: %{ success: false},  error_message: Constants.all_players_not_ready()})
-          )
-          end
        end
 
 

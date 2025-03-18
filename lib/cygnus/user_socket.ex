@@ -79,6 +79,9 @@ defmodule VortexPubSub.Cygnus.UserSocket do
     case Mongo.find_one(:mongo , "users" , %{user_id: user_id}) do
       nil -> Logger.info("No Game found for user")
 
+      {:error, err} -> Logger.info("Some error occured while fetching user_model from MongoDB.")
+      IO.inspect(err)
+
       user_model ->
 
         res = ChessServer.get_game_data(user_model["game_id"])
@@ -89,12 +92,12 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
           "IN-PROGRESS" ->
 
-            Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"] , user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
-          Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"], user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
+            Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_model["user_id"] , user_username_who_left: user_model["username"] , user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
+          Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "default-win-because-user-left" , %{user_id_who_left: user_model["user_id"] , user_username_who_left: user_model["username"], user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
 
           ChessServer.set_state_to_game_over(user_model["game_id"] , false , won_user.user_id)
 
-          KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: user_id , game_id: user_model["game_id"] , score: -15})
+          KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: user_model["user_id"] , game_id: user_model["game_id"] , score: -15})
           KafkaProducer.send_message(Constants.kafka_user_score_update_topic() , %{user_id: won_user.user_id , game_id: user_model["game_id"] , score: 10})
           ChessSupervisor.stop_game(user_model["game_id"])
           "GAME-OVER" ->
@@ -105,8 +108,8 @@ defmodule VortexPubSub.Cygnus.UserSocket do
 
           _ ->
 
-            Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "user-left-event" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"] , user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
-            Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "user-left-event" , %{user_id_who_left: user_id , user_username_who_left: user_model["username"], user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
+            Endpoint.broadcast!( "game:chess:" <> user_model["game_id"] , "user-left-event" , %{user_id_who_left: user_model["user_id"] , user_username_who_left: user_model["username"] , user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
+            Endpoint.broadcast!( "spectate:chess:" <> user_model["game_id"] , "user-left-event" , %{user_id_who_left: user_model["user_id"] , user_username_who_left: user_model["username"], user_id_who_won: won_user.user_id , user_username_who_won: won_user.username} )
 
             #this game can be treated as stalemate case as there is no clear winner since the game was not running
             # both players will be compensated their original amount back
@@ -114,8 +117,6 @@ defmodule VortexPubSub.Cygnus.UserSocket do
             ChessSupervisor.stop_game(user_model["game_id"])
 
         end
-
-
 
         KafkaProducer.send_message(Constants.kafka_user_game_deletion_topic(), %{user_id: user_id , game_id: user_model["game_id"]}, Constants.kafka_game_general_event_key())
 
