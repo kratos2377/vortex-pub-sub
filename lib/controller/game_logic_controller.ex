@@ -1083,6 +1083,8 @@ end
 
 
   post "/check_stake_status" do
+
+
     %{"user_who_is_betting" => user_who_is_betting , "user_betting_on" => user_betting_on , "game_id" => game_id, "bet_type" => bet_type} = conn.body_params
 
 
@@ -1104,6 +1106,14 @@ end
             400,
             Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game or Player. Cannot Place Bet"})
           )
+
+
+          {:error , _} ->
+
+            conn |> put_resp_content_type("application/json") |> send_resp(
+              400,
+              Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game or Player. Cannot Place Bet"})
+            )
 
 
         user_model -> case ChessServer.check_if_stake_is_possible(game_id) do
