@@ -1095,18 +1095,7 @@ end
         Jason.encode!(%{result: %{ success: true},  session_id: session_id})
       )
 
-    :no ->
-
-      case Mongo.find_one(:mongo , "users", %{user_id: user_betting_on, game_id: game_id }) do
-
-        nil ->
-          conn |> put_resp_content_type("application/json") |> send_resp(
-            400,
-            Jason.encode!(%{result: %{ success: false},  error_message: "Invalid Game or Player. Cannot Place Bet"})
-          )
-
-
-        user_model -> case ChessServer.check_if_stake_is_possible(game_id) do
+    :no -> case ChessServer.check_if_stake_is_possible(game_id) do
           {:ok , session_id}->
 
             #can add redis support to fast up queries
@@ -1160,8 +1149,6 @@ end
                 Jason.encode!(%{result: %{ success: false},  error_message: "Game is not IN-PROGRESS yet"})
               )
         end
-
-    end
 
     end
 
